@@ -67,7 +67,7 @@ The project aims to deliver quality recommendations while respecting user privac
 
 ### 🌐 Frontend Setup (Vue + Vite)
 
-1. Navigate to the `backend/` folder:
+1. Navigate to the `frontend/` folder:
    ```bash
    cd frontend
 2. Install frontend dependencies:
