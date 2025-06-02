@@ -52,41 +52,41 @@ The project aims to deliver quality recommendations while respecting user privac
 
 ## 🚀 Getting Started
 
-### 📦 Backend Setup (Node.js + Express)
-
-1. Navigate to the `backend/` folder:
+### 📦 Project Setup (All dependencies + Unified Dev Start)
+1. Install all project dependencies (root, frontend, backend):
    ```bash
-   cd backend
-2. Install dependencies:
-   ```bash
-   npm install
-3. Start the API server:
-   ```bash
-   npm start
-   ```
-
-### 🌐 Frontend Setup (Vue + Vite)
-
-1. Navigate to the `frontend/` folder:
-   ```bash
-   cd frontend
-2. Install frontend dependencies:
-   ```bash
-   npm install
-3. Start the development server:
+   npm run install:all
+2. Run both frontend and backend concurrently:
    ```bash
    npm run dev
-4. Open browser and visit:
+3. Open the frontend in your browser:
    ```bash
    http://localhost:5173
    ```
+4. The backend API will be available at:
+   ```bash
+   http://localhost:3000
+   ```
+---
+### 🔧 Alternative Manual Setup (if needed)
+Backend (Node.js + Express)
+  ```bash
+  cd backend
+  npm install
+  npm run start
+  ```
+Frontend (Vue + Vite)
+  ```bash
+  cd frontend
+  npm install
+  npm run dev
+  ```
 
 <br>
 
 >[!IMPORTANT]
 > The frontend will send HTTP requests to the backend running on localhost:3000.<br>
 > Make sure both servers are running concurrently for proper functionality.
-
 
 >[!WARNING]
 > External APIs like MusicBrainz may throttle or block repeated requests.<br>
