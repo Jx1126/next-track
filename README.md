@@ -1,7 +1,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Jx1126">
-    <img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/147470595?s=200&v=4&h=300&w=300&fit=cover&mask=circle&maxage=7d" alt="Logo" width="200" height="200">
+    <img src="./frontend/public/nexttrack-logo.svg" alt="Logo" width="200" height="200">
   </a>
 
 <h3 align="center">NextTrack – A Stateless Music Recommendation API</h3>
