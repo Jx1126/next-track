@@ -1,7 +1,12 @@
 <template>
 
-  <div class="bg-gray-200">
-    <div class="mx-auto container min-h-screen p-4">
+  <div class="bg-gray-200 smooth-scroll">
+    <!-- background blobs -->
+    <div class="z-1">
+      <BackgroundBlobs />
+    </div>
+
+    <div class="mx-auto container min-h-screen p-4 z-5 relative">
       <div class="app">
         <router-view />
       </div>
@@ -10,5 +15,11 @@
 </template>
 
 <script>
-export default {};
+import BackgroundBlobs from './components/BackgroundBlobs.vue';
+
+export default {
+  components: {
+    BackgroundBlobs,
+  },
+};
 </script>

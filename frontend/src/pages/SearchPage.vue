@@ -20,7 +20,6 @@
       v-if="search_mode === 'simple'"
       type="text"
       v-model="search_query"
-      @input="handleSimpleSearch"
       placeholder="Search tracks..."
       class="py-3 px-5 mb-5 border rounded min-w-1/2 max-w-min focus:outline-none focus:ring-1 focus:ring-stone-800"
     />
@@ -65,10 +64,6 @@ export default {
     return {
       search_mode: "simple",
       search_query: "",
-      searched_tracks: [],
-      selected_tracks: [],
-      search_results: [],
-      no_results: false,
     };
   },
   methods: {
@@ -77,6 +72,24 @@ export default {
         ? "bg-slate-300 text-stone-800 px-5 py-3 rounded-lg hover:cursor-pointer hover:bg-slate-300 ease-in-out duration-200"
         : "bg-transparent text-stone-800 px-5 py-3 rounded-lg hover:cursor-pointer hover:bg-slate-300 ease-in-out duration-200";
     },
-  }
+    handleSimpleSearch() {
+      if (!this.search_query.trim()) return;
+      this.$router.push({
+        name: "SearchResults",
+        query: { q: this.search_query.trim() },
+      });
+    },
+    handleAdvancedSearch() {
+      const query = {};
+      if (this.advanced_search_artist)
+        query.artist = this.advanced_search_artist;
+      if (this.advanced_search_track) query.track = this.advanced_search_track;
+      if (!query.artist && !query.track) return;
+      this.$router.push({
+        name: "SearchResults",
+        query,
+      });
+    },
+  },
 };
 </script>
