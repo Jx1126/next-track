@@ -4,7 +4,7 @@
       class="flex items-center space-x-8 px-6 py-3 rounded-full bg-neutral-800/50 border border-white/10 backdrop-blur-md text-white shadow-md shadow-neutral-900/20"
     >
       <div class="flex items-center space-x-4">
-        <img src="../../public/nexttrack-logo.svg" alt="Logo" class="h-9 w-auto" />
+        <img src="/nexttrack-logo.svg" alt="Logo" class="h-9 w-auto" />
       </div>
 
       <router-link to="/search" :class="updateLinkClass('/search')">Search</router-link>

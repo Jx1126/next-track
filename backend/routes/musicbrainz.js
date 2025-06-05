@@ -91,7 +91,7 @@ router.get('/search', async (req, res) => {
           title: release.title,
           date: release.date,
         })) || [],
-        tags: recording.tags?.slice(0, 5).map(tag => tag.name) || [],
+        tags: recording.tags?.map(tag => tag.name) || [],
         score: recording.score || 0,
       })) || [];
 
@@ -225,6 +225,87 @@ router.get('/playlist/:id', (req, res) => {
     console.error(`Error in /playlist/:id: ${error.message}`);
     res.status(500).json({
       error: 'Failed to retrieve playlist',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route   POST /api/music/playlist/:id/add
+ * @desc    Add a track to a specific playlist by its ID
+ * @params  id (required) - ID of the playlist to which the track will be added
+ * @body    tracks_id (required) - ID of the track to be added to the playlist
+ * @returns {object} - JSON object containing the updated playlist details
+ * @status  201 - Track added to playlist successfully
+ * @status  400 - Bad Request if tracks ID is not provided or track already exists in the playlist
+ * @status  404 - Not Found if the playlist with the provided ID does not exist
+ * @status  500 - Internal Server Error if there is an issue adding the track to the playlist
+ */
+router.post('/playlist/:id/add', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { track_id } = req.body;
+
+    if (!track_id) {
+      return res.status(400).json({
+        error: 'Invalid tracks ID',
+        message: 'Tracks ID is required to add tracks to the playlist'
+      });
+    }
+
+    const playlist = playlists.get(id); // retrieve the playlist by its id
+    // validation: check if the playlist exists
+    if (!playlist) {
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: `No playlist found with ID: ${id}`
+      });
+    }
+
+    // validation: check if the track is already in the playlist
+    const already_in_playlist = playlist.tracks.find(track => track.id === track_id);
+    if (already_in_playlist) {
+      return res.status(400).json({
+        error: 'Track already exists in playlist',
+        message: `Track with ID ${track_id} is already in the playlist`
+      });
+    }
+
+    // fetch track details from MusicBrainz API
+    const data = await createMusicBrainzRequest(`recording/${track_id}`, {
+      inc: 'artists+releases+tags',
+    });
+
+    // construct the track data to be added to the playlist
+    const track_data = {
+      id: data.id,
+      title: data.title,
+      artist: data['artist-credit']?.[0]?.name || 'Unknown Artist',
+      artist_id: data['artist-credit']?.[0]?.artist?.id,
+      length: data.length ? Math.round(data.length / 1000) : 0, // length in seconds
+      added_at : new Date().toISOString(),
+      tags: data.tags?.map(tag => tag.name) || [],
+    };
+
+    playlist.tracks.push(track_data); // add the track to the playlist
+    playlist.last_updated = new Date().toISOString(); // update the last updated timestamp
+
+    // respond with the updated playlist details
+    res.status(201).json({
+      message: 'Track added to playlist successfully',
+      track_data,
+      playlist: {
+        id: playlist.id,
+        name: playlist.name,
+        tracks_count: playlist.tracks.length,
+        last_updated: playlist.last_updated,
+      },
+    });
+
+  } catch (error) {
+    console.error(`Error in /playlist/:id/add: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to add tracks to playlist',
       message: error.message
     });
   }
