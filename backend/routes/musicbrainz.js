@@ -160,4 +160,36 @@ router.post('/playlist/create', (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/music/playlist
+ * @desc    Get all playlists
+ * @returns {object} - JSON object containing an array of all playlists
+ * @status  200 - Playlists retrieved successfully
+ * @status  500 - Internal Server Error if there is an issue retrieving playlists
+ */
+router.get('/playlist', (req, res) => {
+  try {
+    const all_playlists = Array.from(playlists.values()).map(playlist => ({
+      id: playlist.id,
+      name: playlist.name,
+      description: playlist.description,
+      added_tracks_count: playlist.tracks.length,
+      created_at: playlist.created_at,
+      last_updated: playlist.last_updated,
+    }));
+
+    res.json({
+      total_playlists: all_playlists.length,
+      playlists: all_playlists,
+    });
+
+  } catch (error) {
+    console.error(`Error in /playlist: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to retrieve playlists',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
