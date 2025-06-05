@@ -127,6 +127,7 @@ router.post('/playlist/create', (req, res) => {
   try {
     const { playlist_name, playlist_description } = req.body;
 
+    // validation: playlist name is required
     if (!playlist_name) {
       return res.status(400).json({
         error: 'Playlist name required',
@@ -134,6 +135,7 @@ router.post('/playlist/create', (req, res) => {
       });
     }
 
+    // create a unique id for the new playlist
     const playlist_id = Date.now().toString() + Math.random().toString(36).substring(2, 10);
     const playlist = {
       id: playlist_id,
@@ -144,8 +146,10 @@ router.post('/playlist/create', (req, res) => {
       last_updated: new Date().toISOString(),
     }
 
+    // store the new playlist in memory
     playlists.set(playlist_id, playlist);
 
+    // respond with the created playlist details
     res.status(201).json({
       message: 'Playlist created successfully',
       playlist
@@ -164,11 +168,11 @@ router.post('/playlist/create', (req, res) => {
  * @route   GET /api/music/playlist
  * @desc    Get all playlists
  * @returns {object} - JSON object containing an array of all playlists
- * @status  200 - Playlists retrieved successfully
  * @status  500 - Internal Server Error if there is an issue retrieving playlists
  */
 router.get('/playlist', (req, res) => {
   try {
+    // convert the map of playlists to an array of playlist objects
     const all_playlists = Array.from(playlists.values()).map(playlist => ({
       id: playlist.id,
       name: playlist.name,
@@ -178,6 +182,7 @@ router.get('/playlist', (req, res) => {
       last_updated: playlist.last_updated,
     }));
 
+    // respond with the total number of playlists and the list of playlists
     res.json({
       total_playlists: all_playlists.length,
       playlists: all_playlists,
@@ -187,6 +192,39 @@ router.get('/playlist', (req, res) => {
     console.error(`Error in /playlist: ${error.message}`);
     res.status(500).json({
       error: 'Failed to retrieve playlists',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/music/playlist/:id
+ * @desc    Get details of a specific playlist by its ID
+ * @params  id (required) - ID of the playlist to retrieve
+ * @returns {object} - JSON object containing the playlist details
+ * @status  404 - Not Found if the playlist with the given ID does not exist
+ * @status  500 - Internal Server Error if there is an issue retrieving the playlist
+ */
+router.get('/playlist/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const playlist = playlists.get(id); // retrieve the playlist by its id
+
+    // validation: check if the playlist exists
+    if (!playlist) {
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: `No playlist found with ID: ${id}`
+      });
+    }
+
+    // respond with the playlist details
+    res.json({ playlist });
+
+  } catch (error) {
+    console.error(`Error in /playlist/:id: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to retrieve playlist',
       message: error.message
     });
   }
