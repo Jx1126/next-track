@@ -367,4 +367,46 @@ router.delete('/playlist/:id/remove/:track_id', (req, res) => {
   }
 });
 
+/**
+ * @route   DELETE /api/music/playlist/:id
+ * @desc    Delete a specific playlist by its ID
+ * @params  id (required) - ID of the playlist to be deleted
+ * @returns {object} - JSON object containing a success message and details of the deleted playlist
+ * @status  200 - Playlist deleted successfully
+ * @status  404 - Not Found if the playlist with the given ID does not exist
+ * @status  500 - Internal Server Error if there is an issue deleting the playlist
+ */
+router.delete('/playlist/:id/delete', (req, res) => {
+  try {
+    const { id } = req.params;
+    const selected_playlist = playlists.get(id); // retrieve the playlist by its id
+
+    // validation: check if the playlist exists
+    if (!selected_playlist) {
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: `No playlist found with ID: ${id}`
+      });
+    }
+
+    playlists.delete(id); // delete the playlist from memory
+
+    // respond with success message
+    res.status(200).json({
+      message: 'Playlist deleted successfully',
+      deleted_playlist: {
+        id: selected_playlist.id,
+        name: selected_playlist.name,
+      }
+    });
+
+  } catch (error) {
+    console.error(`Error in /playlist/:id: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to delete playlist',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
