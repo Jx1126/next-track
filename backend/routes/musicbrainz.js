@@ -43,7 +43,7 @@ async function createMusicBrainzRequest(endpoint, query = {}) {
  * @query   track  (optional) - Track name
  * @query   limit  (optional) - Number of results to return (default: 10, max: 100)
  * @query   offset (optional) - Offset for pagination (default: 0)
- * @returns {object}          - JSON object containing search results, total tracks, offset, limit, and query
+ * @returns {object} - JSON object containing search results, total tracks, offset, limit, and query
  * @status  200 - Search results returned successfully
  * @status  400 - Bad Request if no search parameters are provided
  * @status  500 - Internal Server Error if there is an issue with the MusicBrainz API request
@@ -233,7 +233,7 @@ router.get('/playlist/:id', (req, res) => {
 /**
  * @route   POST /api/music/playlist/:id/add
  * @desc    Add a track to a specific playlist by its ID
- * @params  id (required) - ID of the playlist to which the track will be added
+ * @params  id (required)        - ID of the playlist to which the track will be added
  * @body    tracks_id (required) - ID of the track to be added to the playlist
  * @returns {object} - JSON object containing the updated playlist details
  * @status  201 - Track added to playlist successfully
@@ -306,6 +306,62 @@ router.post('/playlist/:id/add', async (req, res) => {
     console.error(`Error in /playlist/:id/add: ${error.message}`);
     res.status(500).json({
       error: 'Failed to add tracks to playlist',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route   DELETE /api/music/playlist/:id/remove/:track_id
+ * @desc    Remove a track from a specific playlist by its ID
+ * @params  id (required)       - ID of the playlist from which the track will be removed
+ * @params  track_id (required) - ID of the track to be removed from the playlist
+ * @returns {object} - JSON object containing the removed track and updated playlist details
+ * @status  200 - Track removed from playlist successfully
+ * @status  404 - Not Found if the playlist or track does not exist
+ * @status  500 - Internal Server Error if there is an issue removing the track from the playlist
+ */
+router.delete('/playlist/:id/remove/:track_id', (req, res) => {
+  try {
+    const { id, track_id } = req.params;
+
+    // validation: check if the playlist exists
+    const playlist = playlists.get(id);
+    if (!playlist) {
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: `No playlist found with ID: ${id}`
+      });
+    }
+
+    // validation: check if the track exists in the playlist
+    const track_index = playlist.tracks.findIndex(track => track.id === track_id);
+    if (track_index === -1) {
+      return res.status(404).json({
+        error: 'Track not found in playlist',
+        message: `No track found with ID: ${track_id} in playlist with ID: ${id}`
+      });
+    }
+
+    const removed_track = playlist.tracks.splice(track_index, 1)[0]; // remove the track from the playlist
+    playlist.last_updated = new Date().toISOString(); // update the last updated timestamp
+
+    // respond with success message and updated playlist details
+    res.status(200).json({
+      message: 'Track removed from playlist successfully',
+      removed_track,
+      playlist: {
+        id: playlist.id,
+        name: playlist.name,
+        tracks_count: playlist.tracks.length,
+        last_updated: playlist.last_updated,
+      },
+    });
+
+  } catch (error) {
+    console.error(`Error in /playlist/:id/remove/:track_id: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to remove track from playlist',
       message: error.message
     });
   }
