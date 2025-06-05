@@ -3,7 +3,10 @@
     <h1 class="text-xl font-semibold mb-5">Search Results</h1>
 
     <!-- results table -->
-    <table v-if="search_results.length" class="min-w-full table-auto border-collapse rounded-lg">
+    <table
+      v-if="search_results.length"
+      class="min-w-full table-auto border-collapse rounded-lg"
+    >
       <thead>
         <tr>
           <th>Track</th>
@@ -18,7 +21,7 @@
           <td>{{ track.artist }}</td>
           <td>{{ track.length }}</td>
           <td>
-            <span v-if="track.tags.length">{{ track.tags.join(', ') }}</span>
+            <span v-if="track.tags.length">{{ track.tags.join(", ") }}</span>
             <span v-else class="text-gray-400 italic">--</span>
           </td>
         </tr>
@@ -36,9 +39,9 @@ export default {
     };
   },
   async created() {
-    const query_parameters = new URLSearchParams({ 
-      ...this.$route.query, 
-      limit: 10 
+    const query_parameters = new URLSearchParams({
+      ...this.$route.query,
+      limit: 10,
     }).toString();
 
     try {
@@ -46,11 +49,11 @@ export default {
       const data = await res.json();
       this.search_results = data.search_result_tracks || [];
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       this.search_results = [];
     } finally {
       this.loading = false;
     }
-  }
-}
+  },
+};
 </script>

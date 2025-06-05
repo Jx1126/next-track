@@ -1,12 +1,14 @@
 <template>
+  <div class="smooth-scroll relative" style="background-color: #0A0A0A;">
+    <!-- navigation bar -->
+    <NavBar />
 
-  <div class="bg-gray-200 smooth-scroll">
     <!-- background blobs -->
-    <div class="z-1">
+    <div class="z-1 fixed inset-0 pointer-events-none">
       <BackgroundBlobs />
     </div>
 
-    <div class="mx-auto container min-h-screen p-4 z-5 relative">
+    <div class="mx-auto container min-h-screen p-4 z-5 relative pt-25">
       <div class="app">
         <router-view />
       </div>
@@ -16,10 +18,12 @@
 
 <script>
 import BackgroundBlobs from './components/BackgroundBlobs.vue';
+import NavBar from './components/NavBar.vue';
 
 export default {
   components: {
     BackgroundBlobs,
+    NavBar,
   },
 };
 </script>
