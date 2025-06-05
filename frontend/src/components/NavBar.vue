@@ -1,7 +1,7 @@
 <template>
   <nav class="fixed top-3 left-1/2 transform -translate-x-1/2 z-50">
     <div
-      class="flex items-center space-x-8 px-6 py-3 rounded-full bg-[#0A0A0A]/30 backdrop-blur-md text-white shadow-md shadow-neutral-900/20"
+      class="flex items-center space-x-8 px-6 py-3 rounded-full bg-neutral-800/50 border border-white/10 backdrop-blur-md text-white shadow-md shadow-neutral-900/20"
     >
       <div class="flex items-center space-x-4">
         <img src="../../public/nexttrack-logo.svg" alt="Logo" class="h-9 w-auto" />

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center items-center flex-col">
+  <div class="flex justify-center items-center flex-col h-screen transform -translate-y-[120px]">
     <div class="flex space-x-2 mb-3">
       <button
         @click="search_mode = 'simple'"
@@ -90,27 +90,32 @@ export default {
     return {
       search_mode: "simple",
       search_query: "",
+      advanced_search_artist: "",
+      advanced_search_track: "",
     };
   },
   methods: {
+    // toggle button class based on active state
     buttonClassToggle(active) {
       return active
         ? "bg-neutral-800 font-semibold text-neutral-200 px-5 py-3 rounded-lg hover:cursor-pointer hover:bg-neutral-900 ease-in-out duration-200"
         : "bg-transparent text-neutral-500 px-5 py-3 rounded-lg hover:cursor-pointer hover:bg-neutral-900 ease-in-out duration-200";
     },
+    // simple search redirects to SearchResults page with search query parameter
     handleSimpleSearch() {
-      if (!this.search_query.trim()) return;
+      if (!this.search_query.trim()) return; // prevent empty search
       this.$router.push({
         name: "SearchResults",
         query: { q: this.search_query.trim() },
       });
     },
+    // advanced search redirects to SearchResults page with artist and track query parameters
     handleAdvancedSearch() {
       const query = {};
       if (this.advanced_search_artist)
         query.artist = this.advanced_search_artist;
       if (this.advanced_search_track) query.track = this.advanced_search_track;
-      if (!query.artist && !query.track) return;
+      if (!query.artist && !query.track) return; // ensure at least one field is filled
       this.$router.push({
         name: "SearchResults",
         query,

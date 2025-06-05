@@ -11,7 +11,7 @@ const user_agent = 'NextTrack (https://github.com/Jx1126/next-track)' // require
  * Helper function to create a request to MusicBrainz API
  * 
  * @param {string} endpoint   - MusicBrainz API
- * @param {object} query     - Query parameters for the API request
+ * @param {object} query      - Query parameters for the API request
  * @returns {Promise<object>} - Response data from MusicBrainz API
  */
 async function createMusicBrainzRequest(endpoint, query = {}) {
@@ -93,7 +93,7 @@ router.get('/search', async (req, res) => {
     // return the formatted response back to the client
     res.json({
       search_result_tracks,
-      total_tracks: data.count || 0,
+      total_search_result_tracks: data.count || 0,
       offset: parseInt(offset),
       limit: parseInt(limit),
       query: query,
