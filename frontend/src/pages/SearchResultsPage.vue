@@ -12,10 +12,10 @@
     >
       <thead>
         <tr class="text-neutral-400 text-left">
-          <th class="px-6 py-3 border border-r-0 border-neutral-700 font-semibold rounded-tl-lg">Track</th>
-          <th class="px-6 py-3 border border-l-0 border-r-0 border-neutral-700 font-semibold">Artist</th>
-          <th class="px-6 py-3 border border-l-0 border-r-0 border-neutral-700 font-semibold">Duration</th>
-          <th class="px-6 py-3 border border-l-0 border-neutral-700 font-semibold  rounded-tr-lg">Tags</th>
+          <th class="px-4 py-3 border border-r-0 rounded-tl-lg border-neutral-700">Track</th>
+          <th class="px-4 py-3 border border-x-0 border-neutral-700">Artist</th>
+          <th class="px-4 py-3 border border-x-0 border-neutral-700">Duration</th>
+          <th class="px-4 py-3 border border-x-0 border-r-1 rounded-tr-lg border-neutral-700">Tags</th>
         </tr>
       </thead>
       <tbody>
@@ -31,8 +31,8 @@
           <td class="px-6 py-3 font-normal border-b-1 border-neutral-700">{{ track.length }}</td>
           <!-- add bottom right rounded corners for last result row -->
           <td
-          class="px-6 py-3 font-normal border-b border-r border-neutral-700"
-          :class="{ 'rounded-br-lg': index === search_results.length - 1 }"
+            class="px-6 py-3 font-normal border-b border-r border-neutral-700"
+            :class="{ 'rounded-br-lg': index === search_results.length - 1 }"
           >
             <span v-if="track.tags.length">{{ track.tags.join(", ") }}</span>
             <span v-else class="text-gray-400">--</span>
