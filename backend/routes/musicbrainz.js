@@ -7,6 +7,8 @@ const { parse } = require('dotenv');
 const musicbrainz_url = 'https://musicbrainz.org/ws/2/';
 const user_agent = 'NextTrack (https://github.com/Jx1126/next-track)' // required by MusicBrainz for proper request identification
 
+const playlists = new Map(); // memory storage for playlists
+
 /**
  * Helper function to create a request to MusicBrainz API
  * 
@@ -34,14 +36,17 @@ async function createMusicBrainzRequest(endpoint, query = {}) {
 }
 
 /**
- * @route   GET /api/musicbrainz/search
+ * @route   GET /api/music/search
  * @desc    Search for tracks in MusicBrainz database
  * @query   q      (optional) - General search query
  * @query   artist (optional) - Artist name
  * @query   track  (optional) - Track name
  * @query   limit  (optional) - Number of results to return (default: 10, max: 100)
  * @query   offset (optional) - Offset for pagination (default: 0)
- * @returns {object} - JSON object containing search results, total tracks, offset, limit, and query
+ * @returns {object}          - JSON object containing search results, total tracks, offset, limit, and query
+ * @status  200 - Search results returned successfully
+ * @status  400 - Bad Request if no search parameters are provided
+ * @status  500 - Internal Server Error if there is an issue with the MusicBrainz API request
  */
 router.get('/search', async (req, res) => {
   try {
@@ -103,6 +108,53 @@ router.get('/search', async (req, res) => {
     console.error(`Error in /search: ${error.message}`);
     res.status(500).json({
       error: 'Internal Server Error',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route   POST /api/music/playlist/create
+ * @desc    Create a new playlist
+ * @body    playlist_name (required) - Name of the new playlist
+ * @body    playlist_description (optional) - Description of the new playlist
+ * @returns {object} - JSON object containing the created playlist details
+ * @status  201 - Playlist created successfully
+ * @status  400 - Bad Request if playlist name is not provided
+ * @status  500 - Internal Server Error if there is an issue creating the playlist
+ */
+router.post('/playlist/create', (req, res) => {
+  try {
+    const { playlist_name, playlist_description } = req.body;
+
+    if (!playlist_name) {
+      return res.status(400).json({
+        error: 'Playlist name required',
+        message: 'Please provide a name for the playlist'
+      });
+    }
+
+    const playlist_id = Date.now().toString() + Math.random().toString(36).substring(2, 10);
+    const playlist = {
+      id: playlist_id,
+      name: playlist_name,
+      description: playlist_description || '',
+      tracks: [],
+      created_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+    }
+
+    playlists.set(playlist_id, playlist);
+
+    res.status(201).json({
+      message: 'Playlist created successfully',
+      playlist
+    });
+
+  } catch (error) {
+    console.error(`Error in /playlist/create: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to create playlist',
       message: error.message
     });
   }
