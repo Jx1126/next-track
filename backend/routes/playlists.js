@@ -67,6 +67,7 @@ router.post('/create', (req, res) => {
       name: playlist_name,
       description: playlist_description || '',
       tracks: [],
+      added_tracks_count: 0,
       created_at: new Date().toISOString(),
       last_updated: new Date().toISOString(),
     }
