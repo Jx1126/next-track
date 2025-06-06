@@ -101,6 +101,7 @@
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import FormModal from '../components/FormModal.vue';
+import { createToast } from '../stores/toastStore.js';
 
 export default {
   components: {
@@ -128,7 +129,7 @@ export default {
       const data = await res.json();
       this.playlists = data.playlists || [];
     } catch (error) {
-      console.error('Error fetching playlists:', error);
+      createToast('Error fetching playlists ' + error.message, 'error');
     } finally {
       this.loading = false;
     }
@@ -152,7 +153,8 @@ export default {
         const res = await fetch(`/api/music/playlist/${playlistId}/delete`, {
           method: 'DELETE',
         });
-        if (!res.ok) throw new Error('Failed to delete playlist');
+        if (!res.ok) createToast('Playlist does not exist', 'error');
+        else createToast('Playlist deleted successfully', 'success');
         this.playlists = this.playlists.filter(p => p.id !== playlistId); // remove deleted playlist from the list
         this.confirmationModalVisible = false; // close the modal after deletion
         this.selected_playlist_id = null; // reset selected playlist id
@@ -170,7 +172,7 @@ export default {
       const { name, description } = this.form;
       // must have a name for the playlist
       if (!name) {
-        alert('Playlist name is required');
+        createToast('Playlist name is required', 'error');
         return;
       }
 
@@ -185,14 +187,15 @@ export default {
             playlist_description: description }),
         });
 
-        if (!res.ok) throw new Error('Failed to create playlist');
+        if (!res.ok) createToast('Failed to create playlist', 'error');
+        else createToast('Playlist created successfully', 'success');
 
         const new_playlist = await res.json();
         this.playlists.push(new_playlist.playlist); // add the new playlist to the list
         this.formModalVisible = false; // close the modal after creation
         this.form = { name: '', description: '' }; // reset form fields
       } catch (error) {
-        console.error('Error creating playlist:', error);
+        createToast('Error creating playlist: ' + error.message, 'error');
       }
     },
     // show form modal to create a new playlist

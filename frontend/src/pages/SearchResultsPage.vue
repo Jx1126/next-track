@@ -165,6 +165,7 @@
 <script>
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import { createToast } from '../stores/toastStore.js';
 
 export default {
   components: {
@@ -227,7 +228,7 @@ export default {
         this.search_results = data.search_result_tracks || [];
         this.total_search_results = data.total_search_result_tracks || 0;
       } catch (error) {
-        console.error('Error fetching search results:', error);
+        createToast('Error fetching search results: ' + error.message, 'error');
         this.search_results = [];
         this.total_search_results = 0;
       } finally {
@@ -255,6 +256,7 @@ export default {
       const secs = seconds % 60;
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     },
+    // open modal to view track details
     openViewModal(track) {
       this.selected_track = track;
       this.modalMode = 'view';
@@ -262,6 +264,7 @@ export default {
       this.modalDescription = 'Here are the details of the selected track.';
       this.modalVisible = true;
     },
+    // open modal to add track to a playlist
     async openAddModal(track) {
       this.selected_track = track;
       this.modalMode = 'add';
@@ -274,7 +277,7 @@ export default {
         const data = await res.json();
         this.playlists = data.playlists || [];
       } catch (error) {
-        console.error('Error fetching playlists:', error);
+        createToast('Error fetching playlists: ' + error.message, 'error');
         this.playlists = [];
       }
     },
@@ -298,7 +301,7 @@ export default {
     async addTrackToPlaylist() {
       // add selected track to the selected playlists
       if (this.selected_playlist.length === 0) {
-        alert('Please select at least one playlist to add the track to.');
+        createToast('Please select at least one playlist to add the track to.', 'error');
         return;
       }
       try {
@@ -315,11 +318,15 @@ export default {
           });
 
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed to add track to playlist');
+
+          if (!res.ok) {
+            createToast('Track already exists in the playlist!', 'error');
+            return;
+          }
+          createToast('Track added to playlist successfully!', 'success');
         }));
       } catch (error) {
-          console.error('Error adding track to playlist:', error);
-          alert('Failed to add track to playlist. Please try again.');
+        createToast('Error adding track to playlist: ' + error.message, 'error');
       }
       this.selected_playlist = []; // reset selected playlists after action
       this.modalVisible = false; // close the modal after action

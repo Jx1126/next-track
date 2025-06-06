@@ -63,6 +63,7 @@
 <script>
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
+import { createToast } from '../stores/toastStore.js';
 
 export default {
   components: {
@@ -88,8 +89,8 @@ export default {
       const res = await fetch(`/api/music/playlist/${id}`);
       const data = await res.json();
       this.playlist = data.playlist;
-    } catch (err) {
-      console.error('Failed to load playlist:', err);
+    } catch (error) {
+      createToast('Failed to load playlist details' + error.message , 'error');
     } finally {
       this.loading = false;
     }
@@ -114,12 +115,13 @@ export default {
         const res = await fetch(`/api/music/playlist/${playlist_id}/remove/${trackId}`, {
           method: 'DELETE',
         });
-        if (!res.ok) throw new Error('Failed to remove track from playlist');
+        if (!res.ok) createToast('Track does not exist in this playlist', 'error');
+        else createToast('Track removed successfully', 'success');
         this.playlist.tracks = this.playlist.tracks.filter(track => track.id !== trackId); // remove the track from the local playlist data
         this.modalVisible = false; // close the modal after removal
         this.selected_track_id = null; // reset selected track id
-      } catch (err) {
-        console.error('Error removing track:', err);
+      } catch (error) {
+        createToast('Failed to remove track: ' + error.message, 'error');
       }
     },
   }
