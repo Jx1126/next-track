@@ -109,6 +109,7 @@ export default {
         if (!res.ok) throw new Error('Failed to delete playlist');
         this.playlists = this.playlists.filter(p => p.id !== playlistId); // remove deleted playlist from the list
         this.modalVisible = false; // close the modal after deletion
+        this.selected_playlist_id = null; // reset selected playlist id
       } catch (error) {
         console.error('Error deleting playlist:', error);
       };

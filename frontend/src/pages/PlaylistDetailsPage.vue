@@ -35,7 +35,10 @@
               class="px-4 py-3 font-normal border-b border-r border-neutral-700"
               :class="{ 'rounded-br-lg': index === playlist.tracks.length - 1 }"
             >
-              <button class="hover:cursor-pointer hover:text-neutral-500 transition ease-in-out">
+              <button
+                @click="showRemoveModal(track.id)"
+                class="text-neutral-500 font-semibold hover:cursor-pointer hover:text-neutral-400 transition ease-in-out"
+              >
                 Remove
               </button>
             </td>
@@ -46,14 +49,25 @@
       <p v-else class="text-neutral-400">No tracks have been added to this playlist yet.</p>
     </div>
   </div>
+
+  <!-- confirmation modal to track removal -->
+  <Modal
+    :visible="modalVisible"
+    title="Remove Track from Playlist"
+    description="Are you sure you want to remove this track from the playlist? This action cannot be undone."
+    @confirm="removeTrack(selected_track_id)"
+    @cancel="modalVisible = false"
+  />
 </template>
 
 <script>
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import Modal from '../components/Modal.vue';
 
 export default {
   components: {
     LoadingSpinner,
+    Modal,
   },
   data() {
     return {
@@ -63,10 +77,12 @@ export default {
         tracks: [],
       },
       loading: true,
+      modalVisible: false,
+      selected_track_id: null,
     };
   },
   async mounted() {
-    // Fetch playlist details from the API
+    // fetch playlist details from the API
     const { id } = this.$route.params;
     try {
       const res = await fetch(`/api/music/playlist/${id}`);
@@ -79,13 +95,33 @@ export default {
     }
   },
   methods: {
-    // Format duration into a better readable format (mm:ss)
+    // format duration into a better readable format (mm:ss)
     formatDuration(seconds) {
       if (!seconds) return '--';
       const mins = Math.floor(seconds / 60);
       const secs = seconds % 60;
       return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
+    },
+    // show confirmation modal for track removal
+    showRemoveModal(trackId) {
+      this.selected_track_id = trackId;
+      this.modalVisible = true;
+    },
+    // remove track from playlist
+    async removeTrack(trackId) {
+      const playlist_id = this.$route.params.id;
+      try {
+        const res = await fetch(`/api/music/playlist/${playlist_id}/remove/${trackId}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error('Failed to remove track from playlist');
+        this.playlist.tracks = this.playlist.tracks.filter(track => track.id !== trackId); // remove the track from the local playlist data
+        this.modalVisible = false; // close the modal after removal
+        this.selected_track_id = null; // reset selected track id
+      } catch (err) {
+        console.error('Error removing track:', err);
+      }
+    },
   }
 };
 </script>

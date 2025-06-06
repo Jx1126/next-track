@@ -34,6 +34,7 @@
 <script>
 export default {
   name: 'Modal',
+  emits: ['confirm', 'cancel'],
   props: {
     title: {
       type: String,
