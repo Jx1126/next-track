@@ -304,33 +304,39 @@ export default {
         createToast('Please select at least one playlist to add the track to.', 'error');
         return;
       }
+
+      let added_success_count = 0;
+
       try {
-        // make API requests to add the track to each selected playlist
-        await Promise.all(this.selected_playlist.map(async (playlistId) => {
+        for (const playlistId of this.selected_playlist) {
           const res = await fetch(`/api/music/playlist/${playlistId}/add`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              track_id: this.selected_track.id,
-            }),
+            body: JSON.stringify({ track_id: this.selected_track.id }),
           });
 
           const data = await res.json();
 
-          if (!res.ok) {
-            createToast('Track already exists in the playlist!', 'error');
-            return;
+          if (res.ok) {
+            added_success_count++;
+          } else {
+            if (res.status === 400) {
+              createToast('Track already exists in playlist', 'error');
+            } else {
+              createToast(`Failed to add track to playlist "${data.message}`, 'error');
+            }
           }
-          createToast('Track added to playlist successfully!', 'success');
-        }));
+        }
+        // show success message if at least one track was added successfully
+        if (added_success_count > 0) {
+          createToast('Track added successfully to selected playlist(s).', 'success');
+        }
       } catch (error) {
         createToast('Error adding track to playlist: ' + error.message, 'error');
-      }
-      this.selected_playlist = []; // reset selected playlists after action
-      this.modalVisible = false; // close the modal after action
-      this.selected_track = null; // reset selected track
+        return;
+      };
     },
   }
 };
