@@ -28,7 +28,7 @@
             {{ track.title }}
           </td>
           <td class="px-6 py-3 font-normal border-b-1 border-neutral-700">{{ track.artist }}</td>
-          <td class="px-6 py-3 font-normal border-b-1 border-neutral-700">{{ track.length }}</td>
+          <td class="px-6 py-3 font-normal border-b-1 border-neutral-700">{{ formatDuration(track.length) }}</td>
           <!-- add bottom right rounded corners for last result row -->
           <td
             class="px-6 py-3 font-normal border-b border-r border-neutral-700"
@@ -146,7 +146,14 @@ export default {
         this.offset -= this.limit;
         this.fetchSearchResults();
       }
-    }
+    },
+    // format duration into a better readable format (mm:ss)
+    formatDuration(seconds) {
+      if (!seconds) return '--';
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    },
   }
 };
 </script>

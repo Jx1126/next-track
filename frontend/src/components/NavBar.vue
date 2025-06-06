@@ -3,9 +3,9 @@
     <div
       class="flex items-center space-x-8 px-6 py-3 rounded-full bg-neutral-800/50 border border-white/10 backdrop-blur-md text-white shadow-md shadow-neutral-900/20"
     >
-      <div class="flex items-center space-x-4">
+      <router-link to="/" class="flex items-center space-x-4 hover:cursor-pointer">
         <img src="/nexttrack-logo.svg" alt="Logo" class="h-9 w-10" />
-      </div>
+      </router-link>
 
       <router-link to="/search" :class="updateLinkClass('/search')">Search</router-link>
       <router-link to="/playlist" :class="updateLinkClass('/playlist')">Playlist</router-link>
