@@ -28,8 +28,9 @@
               <h2 class="text-neutral-400 font-lg">{{ formatDate(playlist.last_updated) }}</h2>
             </div>
             <button
-              @click.stop="deletePlaylist(playlist.id)"
-              class="border-3 border-neutral-800 rounded-lg px-3 py-3 bg-neutral-900 hover:bg-red-500/50 hover:text-neutral-900 hover:cursor-pointer transition ease-in-out">
+              @click.stop="showDeleteModal(playlist.id)"
+              class="border-3 border-neutral-800 rounded-lg px-3 py-3 bg-neutral-900 hover:bg-red-500/50 hover:text-neutral-900 hover:cursor-pointer transition ease-in-out"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-neutral-400 transition ease-in-out">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
               </svg>
@@ -46,19 +47,32 @@
 
   </div>
 
+  <!-- confirmation modal for deleting playlist -->
+  <Modal
+    :visible="modalVisible"
+    title="Delete Playlist"
+    description="Are you sure you want to delete this playlist? This action cannot be undone."
+    @confirm="deletePlaylist(selected_playlist_id)"
+    @cancel="modalVisible = false"
+  />
+
 </template>
 
 <script>
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import Modal from '../components/Modal.vue';
 
 export default {
   components: {
-    LoadingSpinner
+    LoadingSpinner,
+    Modal,
   },
   data() {
     return {
       loading: true,
       playlists: [],
+      modalVisible: false,
+      selected_playlist_id: null,
     };
   },
   async mounted() {
@@ -88,16 +102,22 @@ export default {
     // delete a playlist
     async deletePlaylist(playlistId) {
       try {
+        // make a request to the API to delete the playlist
         const res = await fetch(`/api/music/playlist/${playlistId}/delete`, {
           method: 'DELETE',
         });
-
         if (!res.ok) throw new Error('Failed to delete playlist');
-        this.playlists = this.playlists.filter(p => p.id !== playlistId);
+        this.playlists = this.playlists.filter(p => p.id !== playlistId); // remove deleted playlist from the list
+        this.modalVisible = false; // close the modal after deletion
       } catch (error) {
         console.error('Error deleting playlist:', error);
       };
-    }
+    },
+    // show confirmation modal for deleting a playlist
+    showDeleteModal(playlistId) {
+      this.selected_playlist_id = playlistId;
+      this.modalVisible = true;
+    },
   },
 }
 </script>
