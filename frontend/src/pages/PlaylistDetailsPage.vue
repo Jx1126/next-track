@@ -51,7 +51,7 @@
   </div>
 
   <!-- confirmation modal to track removal -->
-  <Modal
+  <ConfirmationModal
     :visible="modalVisible"
     title="Remove Track from Playlist"
     description="Are you sure you want to remove this track from the playlist? This action cannot be undone."
@@ -62,12 +62,12 @@
 
 <script>
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import Modal from '../components/Modal.vue';
+import ConfirmationModal from '../components/ConfirmationModal.vue';
 
 export default {
   components: {
     LoadingSpinner,
-    Modal,
+    ConfirmationModal,
   },
   data() {
     return {
