@@ -153,8 +153,14 @@
           </div>
         </div>
         <!-- no playlists message -->
-        <div v-else class="text-neutral-400 text-sm">
-          No playlists created... <router-link to="/playlists" class="underline">create new playlist here</router-link>.
+        <div v-else class="text-neutral-400">
+          <div class="flex flex-col">
+            <span>No playlists created..</span>
+            <span>
+              Create a new playlist
+              <router-link to="/playlist" class="underline font-semibold text-neutral-300 transition ease-in-out hover:text-neutral-400">here</router-link>.
+            </span>
+          </div>
         </div>
       </div>
 

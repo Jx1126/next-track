@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { createMusicBrainzRequest } = require('../utils/musicbrainz'); // import the helper function to create MusicBrainz requests
-
-const playlists = new Map(); // memory storage for playlists
+const { playlists } = require('../utils/playlistStore'); // import the in-memory playlists storage
 
 /**
  * @route   GET /api/music/playlist
