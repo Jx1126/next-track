@@ -23,7 +23,7 @@
       </div>
       
       <h2 class="text-lg font-semibold text-neutral-300 w-full text-left ml-5">Recommendation Result</h2>
-      <div class="bg-neutral-900 border border-neutral-700 rounded-xl p-6 w-full flex flex-col items-center gap-5">
+      <div v-if="!embed_loading" class="bg-neutral-900 border border-neutral-700 rounded-xl p-6 w-full flex flex-col items-center gap-5">
         <h2 class="text-lg text-neutral-400">Your Recommended Track is</h2>
         <div class="flex flex-col items-center gap-1">
           <h1 class="text-xl font-bold text-cyan-500">{{ recommended_track.title }}</h1>
@@ -45,6 +45,7 @@
           Regenerate
         </button>
       </div>
+      <LoadingSpinner v-else="embed_loading" class="mt-8" />
     </div>
 
     <!-- loading spinner -->
@@ -64,6 +65,7 @@ export default {
   data() {
     return {
       loading: true,
+      embed_loading: false,
       playlist: {},
       recommended_track: {},
     };
@@ -116,7 +118,7 @@ export default {
     },
     // regenerate recommendation
     async regenerateRecommendation() {
-      this.loading = true; // show loading spinner
+      this.embed_loading = true; // show loading spinner
       try {
         const playlist_id = this.$route.params.id;
         const res = await fetch(`/api/music/recommend/${playlist_id}`, {
@@ -136,7 +138,7 @@ export default {
       } catch (error) {
         createToast('Failed to regenerate recommendation: ' + error.message, 'error');
       } finally {
-        this.loading = false; // hide loading spinner
+        this.embed_loading = false; // hide loading spinner
       }
     },
   }
