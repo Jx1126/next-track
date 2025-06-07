@@ -7,10 +7,10 @@
         <img src="/nexttrack-logo.svg" alt="Logo" class="h-9 w-10" />
       </router-link>
 
+      <router-link to="/recommend" :class="updateLinkClass('/recommend')">Recommend</router-link>
       <router-link to="/search" :class="updateLinkClass('/search')">Search</router-link>
       <router-link to="/playlist" :class="updateLinkClass('/playlist')">Playlist</router-link>
-      <router-link to="/docs" :class="updateLinkClass('/docs')">API</router-link>
-      <router-link to="/guide" :class="updateLinkClass('/guide')">Guide</router-link>
+      <router-link to="/docs" :class="updateLinkClass('/docs')">Docs</router-link>
     </div>
   </nav>
 </template>

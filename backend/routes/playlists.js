@@ -127,7 +127,7 @@ router.get('/:id', (req, res) => {
  * @route   POST /api/music/playlist/:id/add
  * @desc    Add a track to a specific playlist by its ID
  * @params  id (required)        - ID of the playlist to which the track will be added
- * @body    tracks_id (required) - ID of the track to be added to the playlist
+ * @body    track_id (required) - ID of the track to be added to the playlist
  * @returns {object} - JSON object containing the updated playlist details
  * @status  201 - Track added to playlist successfully
  * @status  400 - Bad Request if tracks ID is not provided or track already exists in the playlist
