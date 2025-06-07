@@ -3,6 +3,8 @@ import SearchPage from '../pages/SearchPage.vue';
 import SearchResultsPage from '../pages/SearchResultsPage.vue';
 import PlaylistsPage from '../pages/PlaylistsPage.vue';
 import PlaylistDetailsPage from '../pages/PlaylistDetailsPage.vue';
+import RecommendationPage from '../pages/RecommendationPage.vue';
+import RecommendationResultPage from '../pages/RecommendationResultPage.vue';
 
 const routes = [
   {
@@ -24,6 +26,16 @@ const routes = [
     path: '/playlist/:id',
     name: 'PlaylistDetails',
     component: PlaylistDetailsPage,
+  },
+  {
+    path: '/recommend',
+    name: 'Recommend',
+    component: RecommendationPage,
+  },
+  {
+    path: '/recommend/:id/result',
+    name: 'RecommendationResult',
+    component: RecommendationResultPage,
   },
 ]
 
