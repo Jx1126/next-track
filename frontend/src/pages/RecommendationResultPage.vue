@@ -37,6 +37,13 @@
           class="w-full h-96 rounded-lg shadow-lg mt-4 border-2 border-neutral-700"
         ></iframe>
         <p v-else>Sorry, no YouTube embed available for this track.</p>
+
+        <button
+          @click="regenerateRecommendation"
+          class="border border-neutral-700 text-neutral-300 transition font-semibold px-6 py-3 rounded-lg hover:cursor-pointer hover:bg-neutral-800 ease-in-out"
+        >
+          Regenerate
+        </button>
       </div>
     </div>
 
@@ -106,6 +113,31 @@ export default {
       // get the video id from the entire link
       const video_id = new URL(link).searchParams.get('v');
       return `https://www.youtube.com/embed/${video_id}`;
+    },
+    // regenerate recommendation
+    async regenerateRecommendation() {
+      this.loading = true; // show loading spinner
+      try {
+        const playlist_id = this.$route.params.id;
+        const res = await fetch(`/api/music/recommend/${playlist_id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ preferences: {} }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to regenerate recommendation');
+        }
+
+        const data = await res.json();
+        this.recommended_track = data.recommended_track || {}; // update recommended track
+      } catch (error) {
+        createToast('Failed to regenerate recommendation: ' + error.message, 'error');
+      } finally {
+        this.loading = false; // hide loading spinner
+      }
     },
   }
 };
