@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
 const { createMusicBrainzRequest } = require('../utils/musicbrainz'); // import the helper function to create MusicBrainz requests
 
 /**
