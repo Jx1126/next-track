@@ -40,8 +40,10 @@ router.post('/:id', async (req, res) => {
       message: 'Track recommendation generated successfully',
       playlist: {
         id: playlist.id,
-        title: playlist.title,
+        name: playlist.name,
+        description: playlist.description,
         added_tracks_count: playlist.tracks.length,
+        last_updated: playlist.last_updated,
       },
       preferences,
       recommended_track,
