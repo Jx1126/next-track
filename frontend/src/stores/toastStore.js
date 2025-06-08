@@ -4,7 +4,7 @@ export const toastStore = reactive({
   toasts: [],
 });
 
-export function createToast(message, type = 'error', duration = 5000) {
+export function createToast(message, type = 'error', duration = 3000) {
   const id = Date.now();
   const toast = { id, message, type };
 
