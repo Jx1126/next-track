@@ -130,6 +130,7 @@ export default {
     this.loading = false;
   },
   watch: {
+    // watch for route changes to update playlists
     '$route'() {
       const stored_playlists = getPlaylists();
       this.playlists = stored_playlists;

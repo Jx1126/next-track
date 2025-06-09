@@ -158,7 +158,7 @@
             <span>No playlists created..</span>
             <span>
               Create a new playlist
-              <router-link to="/playlist" class="underline font-semibold text-neutral-300 transition ease-in-out hover:text-neutral-400">here</router-link>.
+              <router-link to="/playlists" class="underline font-semibold text-neutral-300 transition ease-in-out hover:text-neutral-400">here</router-link>.
             </span>
           </div>
         </div>
@@ -172,6 +172,8 @@
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import { createToast } from '../stores/toastStore.js';
+import { formatDuration } from '../utils/utils.js';
+import { getPlaylists, updatePlaylist } from '../stores/playlistStore.js';
 
 export default {
   components: {
@@ -255,13 +257,6 @@ export default {
         this.fetchSearchResults();
       }
     },
-    // format duration into a better readable format (mm:ss)
-    formatDuration(seconds) {
-      if (!seconds) return '--';
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    },
     // open modal to view track details
     openViewModal(track) {
       this.selected_track = track;
@@ -279,9 +274,7 @@ export default {
       this.modalVisible = true;
 
       try {
-        const res = await fetch('/api/music/playlist');
-        const data = await res.json();
-        this.playlists = data.playlists || [];
+        this.playlists = getPlaylists(); // fetch playlists from the store
       } catch (error) {
         createToast('Error fetching playlists: ' + error.message, 'error');
         this.playlists = [];
@@ -311,28 +304,39 @@ export default {
         return;
       }
 
-      let added_success_count = 0;
-
       try {
+        let playlists = getPlaylists(); // fetch playlists from the store
+        let added_success_count = 0;
+
         for (const playlistId of this.selected_playlist) {
-          const res = await fetch(`/api/music/playlist/${playlistId}/add`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ track_id: this.selected_track.id }),
-          });
+          const playlist = playlists.find(p => p.id === playlistId);
+          // check if the playlist exists
+          if (!playlist) {
+            createToast(`Playlist with ID ${playlistId} not found`, 'error');
+            continue;
+          }
 
-          const data = await res.json();
+          try {
+            const res = await fetch(`/api/music/playlist/add`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ playlist, track_id: this.selected_track.id }),
+            });
 
-          if (res.ok) {
-            added_success_count++;
-          } else {
-            if (res.status === 400) {
-              createToast('Track already exists in playlist', 'error');
+            const data = await res.json();
+
+            if (!res.ok) {
+              createToast('Failed to add track to playlist', 'error');
             } else {
-              createToast(`Failed to add track to playlist "${data.message}`, 'error');
+              const updated_playlist = data.playlist;
+              updatePlaylist(playlistId, updated_playlist.tracks); // update the local store
+              added_success_count++;
             }
+          } catch (error) {
+            createToast(`Error fetching playlist with ID ${playlistId}: ` + error.message, 'error');
+            continue;
           }
         }
         // show success message if at least one track was added successfully
@@ -344,6 +348,7 @@ export default {
         return;
       };
     },
+    formatDuration,
   }
 };
 </script>

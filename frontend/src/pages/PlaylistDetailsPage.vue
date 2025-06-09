@@ -98,6 +98,7 @@ export default {
     }
   },
   watch: {
+    // watch for changes in the route query to update the playlist
     '$route.query.id'(id) {
       const playlist = getPlaylistById(id);
       if (playlist) {
@@ -137,15 +138,18 @@ export default {
         })
 
         // check if the response is ok
-        if (!res.ok) createToast('Track does not exist in this playlist', 'error');
-        else createToast('Track removed successfully', 'success');
-
+        if (!res.ok) {
+          createToast('Track does not exist in this playlist', 'error');
+          return;
+        }
+        
         const data = await res.json();
         this.playlist = data.playlist; // update the playlist with the new data
-        updatePlaylist(this.current_playlist_id, this.playlist); // update the local store
-
+        updatePlaylist(this.current_playlist_id, this.playlist.tracks); // update the local store
+        createToast('Track removed successfully', 'success');
+        
         // reset modal state
-        this.confirmationModalVisible = false;
+        this.modalVisible = false;
         this.selected_track_id = null;
       } catch (error) {
         createToast('Failed to remove track: ' + error.message, 'error');

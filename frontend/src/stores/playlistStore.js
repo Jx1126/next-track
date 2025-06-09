@@ -39,6 +39,7 @@ export function updatePlaylist(id, updatedTracks) {
 
   if (index !== -1) {
     playlists[index].tracks = updatedTracks;
+    playlists[index].added_tracks_count = updatedTracks.length;
     playlists[index].last_updated = new Date().toISOString();
     savePlaylists(playlists);
   }
