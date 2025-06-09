@@ -9,7 +9,7 @@
 
       <router-link to="/recommend" :class="updateLinkClass('/recommend')">Recommend</router-link>
       <router-link to="/search" :class="updateLinkClass('/search')">Search</router-link>
-      <router-link to="/playlist" :class="updateLinkClass('/playlist')">Playlist</router-link>
+      <router-link to="/playlists" :class="updateLinkClass('/playlists')">Playlists</router-link>
       <router-link to="/docs" :class="updateLinkClass('/docs')">Docs</router-link>
     </div>
   </nav>

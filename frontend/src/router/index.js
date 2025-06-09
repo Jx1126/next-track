@@ -1,11 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import SearchPage from '../pages/SearchPage.vue';
 import SearchResultsPage from '../pages/SearchResultsPage.vue';
-import PlaylistPage from '../pages/PlaylistPage.vue';
+import PlaylistsPage from '../pages/PlaylistsPage.vue';
+import PlaylistDetailsPage from '../pages/PlaylistDetailsPage.vue';
 import RecommendationPage from '../pages/RecommendationPage.vue';
 import RecommendationResultPage from '../pages/RecommendationResultPage.vue';
 
 const routes = [
+  {
+    path: '/',
+    redirect: '/playlists'
+  },
   {
     path: '/search',
     name: 'Search',
@@ -17,9 +22,14 @@ const routes = [
     component: SearchResultsPage,
   },
   {
+    path: '/playlists',
+    name: 'Playlists',
+    component: PlaylistsPage,
+  },
+  {
     path: '/playlist',
-    name: 'Playlist',
-    component: PlaylistPage,
+    name: 'PlaylistDetails',
+    component: PlaylistDetailsPage,
   },
   {
     path: '/recommend',

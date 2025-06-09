@@ -1,39 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const { generateTrackRecommendation } = require('../utils/recommendationEngine'); // import the recommendation generation function
-const { generatePlaylistToken, verifyPlaylistToken } = require('../utils/playlistToken');
 
 /**
  * @route   POST /api/music/recommend/
- * @desc    Generate a track recommendation based on the provided playlist token and user preferences
- * @body    playlist_token (required) - Token of the playlist
+ * @desc    Generate a track recommendation based on the provided playlist and user preferences
+ * @body    playlist (required) - Current playlist object
  * @body    preferences (optional) - User preferences
  * @returns {Object} - JSON object containing the recommended track and playlist details
  */
 router.post('/', async (req, res) => {
   try {
-    const { playlist_token, preferences = {} } = req.body;
+    const { playlist, preferences = {} } = req.body;
 
-    // validation: playlist token is required
-    if (!playlist_token) {
+    // validation: playlist is required
+    if (!playlist) {
       return res.status(400).json({
         error: 'Playlist token is required',
         message: 'Please provide a valid playlist token to generate a recommendation.',
       });
-    }
-
-    const playlist = verifyPlaylistToken(playlist_token);
-
-    // validation: playlist must exist and have at least one track
-    if (!playlist) {
-      return res.status(404).json({
-        error: 'Playlist not found',
-        message: 'The provided playlist token is invalid or the playlist does not exist.',
-      });
-    } else if (!playlist.tracks || playlist.tracks.length === 0) {
+    } else if (playlist.tracks.length === 0) {
       return res.status(400).json({
-        error: 'No tracks in playlist',
-        message: 'The playlist must contain at least one track to generate a recommendation.',
+        error: 'Playlist is empty',
+        message: 'Please add tracks to the playlist before generating a recommendation.',
       });
     }
 
@@ -60,7 +49,10 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error(`Error in /recommend ${error.message}`);
-    return res.status(500).json({ error: 'Failed to generate recommendation', message: error.message });
+    return res.status(500).json({
+      error: 'Failed to generate recommendation',
+      message: error.message
+    });
   }
 });
 
