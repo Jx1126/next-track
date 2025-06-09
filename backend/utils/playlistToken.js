@@ -4,7 +4,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'next-track-jwt';
 /**
  * Generates a JWT token for a playlist.
  * 
- * @param {string} playlistId - The ID of the playlist.
+ * @param {object} playlist - The playlist object.
  * @return {string} - The generated JWT token.
  */
 function generatePlaylistToken(playlist) {
@@ -25,7 +25,7 @@ function generatePlaylistToken(playlist) {
  * Verifies a JWT token for a playlist.
  * 
  * @param {string} token - The JWT token to verify.
- * @return {string|null} - The playlist ID if the token is valid, otherwise null.
+ * @return {object|null} - The playlist if the token is valid, otherwise null.
  */
 function verifyPlaylistToken(token) {
   try {
