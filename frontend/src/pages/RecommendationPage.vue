@@ -119,6 +119,7 @@
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import { createToast } from '../stores/toastStore.js';
+import { getPlaylists } from '../stores/playlistStore.js';
 
 export default {
   components: {
@@ -151,10 +152,7 @@ export default {
     // open playlist selection modal
     async openPlaylistModal() {
       try {
-        // fetch playlists from the API
-        const res = await fetch('/api/music/playlist');
-        const data = await res.json();
-        this.playlists = data.playlists || [];
+        this.playlists = getPlaylists(); // fetch playlists from the store
       } catch (error) {
         createToast('Error fetching playlists: ' + error.message, 'error');
         this.playlists = [];

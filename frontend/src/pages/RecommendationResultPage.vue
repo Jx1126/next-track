@@ -57,6 +57,7 @@
 <script>
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import { createToast } from '../stores/toastStore.js';
+import { getPlaylistById } from '../stores/playlistStore.js';
 
 export default {
   components: {
@@ -72,15 +73,16 @@ export default {
   },
   async mounted() {
     const playlist_id = this.$route.params.id;
+    const playlist = getPlaylistById(playlist_id);
 
     try {
       // get recommendation results from the API
-      const res = await fetch(`/api/music/recommend/${playlist_id}`, {
+      const res = await fetch(`/api/music/recommend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ preferences: {} }),
+        body: JSON.stringify({ playlist, preferences: {} }),
       });
 
       if (!res.ok) {
@@ -121,12 +123,14 @@ export default {
       this.embed_loading = true; // show loading spinner
       try {
         const playlist_id = this.$route.params.id;
-        const res = await fetch(`/api/music/recommend/${playlist_id}`, {
+        const playlist = getPlaylistById(playlist_id);
+
+        const res = await fetch(`/api/music/recommend`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ preferences: {} }),
+          body: JSON.stringify({ playlist, preferences: {} }),
         });
 
         if (!res.ok) {
