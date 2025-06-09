@@ -1,32 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const { playlists } = require('../utils/playlistStore'); // import the in-memory playlists storage
 const { generateTrackRecommendation } = require('../utils/recommendationEngine'); // import the recommendation generation function
+const { generatePlaylistToken, verifyPlaylistToken } = require('../utils/playlistToken');
 
 /**
- * @route   POST /api/music/recommend/:id
- * @desc    Generate a track recommendation based on the provided playlist ID and user preferences
- * @param   {string} id - Playlist ID
- * @body    preferences - User preferences for track recommendation (optional)
+ * @route   POST /api/music/recommend/
+ * @desc    Generate a track recommendation based on the provided playlist token and user preferences
+ * @body    playlist_token (required) - Token of the playlist
+ * @body    preferences (optional) - User preferences
  * @returns {Object} - JSON object containing the recommended track and playlist details
- * @status  200 - Track recommendation generated successfully
- * @status  400 - Bad Request if the playlist ID is invalid or preferences are not provided
- * @status  404 - Not Found if the playlist does not exist or has no tracks
- * @status  500 - Internal Server Error if there is an issue generating the recommendation
  */
-router.post('/:id', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { id } = req.params;
-    const preferences = req.body.preferences || {};
+    const { playlist_token, preferences = {} } = req.body;
 
-    const playlist = playlists.get(id); // retrieve the playlist by id
+    // validation: playlist token is required
+    if (!playlist_token) {
+      return res.status(400).json({
+        error: 'Playlist token is required',
+        message: 'Please provide a valid playlist token to generate a recommendation.',
+      });
+    }
+
+    const playlist = verifyPlaylistToken(playlist_token);
 
     // validation: playlist must exist and have at least one track
     if (!playlist) {
-      return res.status(404).json({ error: 'Playlist not found' });
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: 'The provided playlist token is invalid or the playlist does not exist.',
+      });
     } else if (!playlist.tracks || playlist.tracks.length === 0) {
-      return res.status(404).json({ error: 'Playlist has no tracks' });
-    };
+      return res.status(400).json({
+        error: 'No tracks in playlist',
+        message: 'The playlist must contain at least one track to generate a recommendation.',
+      });
+    }
 
     // generate a track recommendation based on the playlist tracks and user preferences
     const recommended_track = await generateTrackRecommendation(playlist.tracks, preferences);
@@ -50,7 +59,7 @@ router.post('/:id', async (req, res) => {
       recommended_at: new Date().toISOString(),
     });
   } catch (error) {
-    console.error(`Error in /recommend/:id ${error.message}`);
+    console.error(`Error in /recommend ${error.message}`);
     return res.status(500).json({ error: 'Failed to generate recommendation', message: error.message });
   }
 });

@@ -1,40 +1,39 @@
 const express = require('express');
 const router = express.Router();
 const { createMusicBrainzRequest } = require('../utils/musicbrainz'); // import the helper function to create MusicBrainz requests
-const { playlists } = require('../utils/playlistStore'); // import the in-memory playlists storage
+const { generatePlaylistToken, verifyPlaylistToken } = require('../utils/playlistToken');
 
-/**
- * @route   GET /api/music/playlist
- * @desc    Get all playlists
- * @returns {object} - JSON object containing an array of all playlists
- * @status  500 - Internal Server Error if there is an issue retrieving playlists
- */
-router.get('/', (req, res) => {
-  try {
-    // convert the map of playlists to an array of playlist objects
-    const all_playlists = Array.from(playlists.values()).map(playlist => ({
-      id: playlist.id,
-      name: playlist.name,
-      description: playlist.description,
-      added_tracks_count: playlist.tracks.length,
-      created_at: playlist.created_at,
-      last_updated: playlist.last_updated,
-    }));
+// /**
+//  * @route   GET /api/music/playlist
+//  * @desc    Get all playlists
+//  * @returns {object} - JSON object containing an array of all playlists
+//  */
+// router.get('/', (req, res) => {
+//   try {
+//     // convert the map of playlists to an array of playlist objects
+//     const all_playlists = Array.from(playlists.values()).map(playlist => ({
+//       id: playlist.id,
+//       name: playlist.name,
+//       description: playlist.description,
+//       added_tracks_count: playlist.tracks.length,
+//       created_at: playlist.created_at,
+//       last_updated: playlist.last_updated,
+//     }));
 
-    // respond with the total number of playlists and the list of playlists
-    res.json({
-      total_playlists: all_playlists.length,
-      playlists: all_playlists,
-    });
+//     // respond with the total number of playlists and the list of playlists
+//     res.json({
+//       total_playlists: all_playlists.length,
+//       playlists: all_playlists,
+//     });
 
-  } catch (error) {
-    console.error(`Error in /playlist: ${error.message}`);
-    res.status(500).json({
-      error: 'Failed to retrieve playlists',
-      message: error.message
-    });
-  }
-});
+//   } catch (error) {
+//     console.error(`Error in /playlist: ${error.message}`);
+//     res.status(500).json({
+//       error: 'Failed to retrieve playlists',
+//       message: error.message
+//     });
+//   }
+// });
 
 /**
  * @route   POST /api/music/playlist/create
@@ -42,9 +41,6 @@ router.get('/', (req, res) => {
  * @body    playlist_name (required) - Name of the new playlist
  * @body    playlist_description (optional) - Description of the new playlist
  * @returns {object} - JSON object containing the created playlist details
- * @status  201 - Playlist created successfully
- * @status  400 - Bad Request if playlist name is not provided
- * @status  500 - Internal Server Error if there is an issue creating the playlist
  */
 router.post('/create', (req, res) => {
   try {
@@ -70,12 +66,12 @@ router.post('/create', (req, res) => {
       last_updated: new Date().toISOString(),
     }
 
-    // store the new playlist in memory
-    playlists.set(playlist_id, playlist);
+    const playlist_token = generatePlaylistToken(playlist); // generate a token for the playlist
 
     // respond with the created playlist details
     res.status(201).json({
       message: 'Playlist created successfully',
+      playlist_token,
       playlist
     });
 
@@ -89,31 +85,35 @@ router.post('/create', (req, res) => {
 });
 
 /**
- * @route   GET /api/music/playlist/:id
- * @desc    Get details of a specific playlist by its ID
- * @params  id (required) - ID of the playlist to retrieve
+ * @route   POST /api/music/playlist/get
+ * @desc    Get details of a specific playlist by its token
+ * @body    playlist_token (required) - Token of the playlist
  * @returns {object} - JSON object containing the playlist details
- * @status  404 - Not Found if the playlist with the given ID does not exist
- * @status  500 - Internal Server Error if there is an issue retrieving the playlist
  */
-router.get('/:id', (req, res) => {
+router.post('/get', (req, res) => {
   try {
-    const { id } = req.params;
-    const playlist = playlists.get(id); // retrieve the playlist by its id
+    const { playlist_token } = req.body;
 
-    // validation: check if the playlist exists
-    if (!playlist) {
-      return res.status(404).json({
-        error: 'Playlist not found',
-        message: `No playlist found with ID: ${id}`
+    if (!playlist_token) {
+      return res.status(400).json({
+        error: 'Invalid playlist token',
+        message: 'Playlist token is required to retrieve playlist details'
       });
     }
 
-    // respond with the playlist details
-    res.json({ playlist });
+    // validation: check if the playlist exists
+    const playlist = verifyPlaylistToken(playlist_token);
+    if (!playlist) {
+      return res.status(404).json({
+        error: 'Playlist not found',
+        message: 'No playlist found with the provided token'
+      });
+    }
+
+    res.json({ playlist }); // respond with the playlist details
 
   } catch (error) {
-    console.error(`Error in /playlist/:id: ${error.message}`);
+    console.error(`Error in /playlist/get ${error.message}`);
     res.status(500).json({
       error: 'Failed to retrieve playlist',
       message: error.message
@@ -122,34 +122,29 @@ router.get('/:id', (req, res) => {
 });
 
 /**
- * @route   POST /api/music/playlist/:id/add
- * @desc    Add a track to a specific playlist by its ID
- * @params  id (required)        - ID of the playlist to which the track will be added
+ * @route   POST /api/music/playlist/add
+ * @desc    Add a track to a specific playlist by its token
+ * @body    playlist_token (required) - Token of the playlist
  * @body    track_id (required) - ID of the track to be added to the playlist
  * @returns {object} - JSON object containing the updated playlist details
- * @status  201 - Track added to playlist successfully
- * @status  400 - Bad Request if tracks ID is not provided or track already exists in the playlist
- * @status  404 - Not Found if the playlist with the provided ID does not exist
- * @status  500 - Internal Server Error if there is an issue adding the track to the playlist
  */
-router.post('/:id/add', async (req, res) => {
+router.post('/add', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { track_id } = req.body;
+    const { playlist_token, track_id } = req.body;
 
-    if (!track_id) {
+    if (!playlist_token || !track_id) {
       return res.status(400).json({
-        error: 'Invalid tracks ID',
-        message: 'Tracks ID is required to add tracks to the playlist'
+        error: 'Invalid request',
+        message: 'Both playlist token and track ID are required to add a track to the playlist'
       });
     }
 
-    const playlist = playlists.get(id); // retrieve the playlist by its id
+    const playlist = verifyPlaylistToken(playlist_token); // verify the playlist token
     // validation: check if the playlist exists
     if (!playlist) {
       return res.status(404).json({
         error: 'Playlist not found',
-        message: `No playlist found with ID: ${id}`
+        message: `No playlist found with the provided token`
       });
     }
 
@@ -179,11 +174,15 @@ router.post('/:id/add', async (req, res) => {
     };
 
     playlist.tracks.push(track_data); // add the track to the playlist
+    playlist.added_tracks_count = playlist.tracks.length; // update the count of added tracks
     playlist.last_updated = new Date().toISOString(); // update the last updated timestamp
+
+    const updated_token = generatePlaylistToken(playlist); // generate a new token for the updated playlist
 
     // respond with the updated playlist details
     res.status(201).json({
       message: 'Track added to playlist successfully',
+      playlist_token: updated_token,
       track_data,
       playlist: {
         id: playlist.id,
@@ -194,7 +193,7 @@ router.post('/:id/add', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(`Error in /playlist/:id/add: ${error.message}`);
+    console.error(`Error in /playlist/add ${error.message}`);
     res.status(500).json({
       error: 'Failed to add tracks to playlist',
       message: error.message
@@ -204,24 +203,29 @@ router.post('/:id/add', async (req, res) => {
 
 /**
  * @route   DELETE /api/music/playlist/:id/remove/:track_id
- * @desc    Remove a track from a specific playlist by its ID
- * @params  id (required)       - ID of the playlist from which the track will be removed
- * @params  track_id (required) - ID of the track to be removed from the playlist
+ * @desc    Remove a track from a specific playlist by token
+ * @body    playlist_token (required) - Token of the playlist
+ * @body    track_id (required) - ID of the track to be removed from the playlist
  * @returns {object} - JSON object containing the removed track and updated playlist details
- * @status  200 - Track removed from playlist successfully
- * @status  404 - Not Found if the playlist or track does not exist
- * @status  500 - Internal Server Error if there is an issue removing the track from the playlist
  */
-router.delete('/:id/remove/:track_id', (req, res) => {
+router.delete('/remove', (req, res) => {
   try {
-    const { id, track_id } = req.params;
+    const { playlist_token, track_id } = req.body;
 
     // validation: check if the playlist exists
-    const playlist = playlists.get(id);
+    if (!playlist_token || !track_id) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Both playlist token and track ID are required to remove a track from the playlist'
+      });
+    }
+
+    // validation: verify the playlist token
+    const playlist = verifyPlaylistToken(playlist_token); // verify the playlist token
     if (!playlist) {
       return res.status(404).json({
         error: 'Playlist not found',
-        message: `No playlist found with ID: ${id}`
+        message: `No playlist found with the provided token`
       });
     }
 
@@ -230,16 +234,19 @@ router.delete('/:id/remove/:track_id', (req, res) => {
     if (track_index === -1) {
       return res.status(404).json({
         error: 'Track not found in playlist',
-        message: `No track found with ID: ${track_id} in playlist with ID: ${id}`
+        message: `No track found with ID: ${track_id} in the playlist.`
       });
     }
 
     const removed_track = playlist.tracks.splice(track_index, 1)[0]; // remove the track from the playlist
     playlist.last_updated = new Date().toISOString(); // update the last updated timestamp
 
+    const updated_token = generatePlaylistToken(playlist); // generate a new token for the updated playlist
+
     // respond with success message and updated playlist details
     res.status(200).json({
       message: 'Track removed from playlist successfully',
+      playlist_token: updated_token,
       removed_track,
       playlist: {
         id: playlist.id,
@@ -250,7 +257,7 @@ router.delete('/:id/remove/:track_id', (req, res) => {
     });
 
   } catch (error) {
-    console.error(`Error in /playlist/:id/remove/:track_id: ${error.message}`);
+    console.error(`Error in /playlist/remove/ ${error.message}`);
     res.status(500).json({
       error: 'Failed to remove track from playlist',
       message: error.message
@@ -259,28 +266,30 @@ router.delete('/:id/remove/:track_id', (req, res) => {
 });
 
 /**
- * @route   DELETE /api/music/playlist/:id
- * @desc    Delete a specific playlist by its ID
- * @params  id (required) - ID of the playlist to be deleted
+ * @route   DELETE /api/music/playlist/delete
+ * @desc    Delete a specific playlist by discarding its token
+ * @body    playlist_token (required) - Token of the playlist to be deleted
  * @returns {object} - JSON object containing a success message and details of the deleted playlist
- * @status  200 - Playlist deleted successfully
- * @status  404 - Not Found if the playlist with the given ID does not exist
- * @status  500 - Internal Server Error if there is an issue deleting the playlist
  */
-router.delete('/:id/delete', (req, res) => {
+router.delete('/delete', (req, res) => {
   try {
-    const { id } = req.params;
-    const selected_playlist = playlists.get(id); // retrieve the playlist by its id
+    const { playlist_token } = req.body;
 
+    if (!playlist_token) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Playlist token is required to delete a playlist'
+      }); 
+    }
+    
     // validation: check if the playlist exists
+    const selected_playlist = verifyPlaylistToken(playlist_token); // verify the playlist token
     if (!selected_playlist) {
       return res.status(404).json({
         error: 'Playlist not found',
-        message: `No playlist found with ID: ${id}`
+        message: `No playlist found with the provided token`
       });
     }
-
-    playlists.delete(id); // delete the playlist from memory
 
     // respond with success message
     res.status(200).json({
@@ -292,7 +301,7 @@ router.delete('/:id/delete', (req, res) => {
     });
 
   } catch (error) {
-    console.error(`Error in /playlist/:id: ${error.message}`);
+    console.error(`Error in /playlist/delete: ${error.message}`);
     res.status(500).json({
       error: 'Failed to delete playlist',
       message: error.message
