@@ -1,52 +1,92 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto" v-if="playlist">
-    <h1 class="text-2xl font-bold text-neutral-200 mb-4">{{ playlist.name }}</h1>
-    <p class="text-neutral-400 text-lg mb-6">{{ playlist.description || 'No description provided.' }}</p>
+  <div class="p-8 max-w-6xl mx-auto">
+    <!-- header section -->
+    <div v-if="playlist" class="mb-8">
+      <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text tracking-wide mb-4">{{ playlist.name }}</h1>
+      <p class="text-neutral-400 text-lg leading-relaxed">{{ playlist.description || 'No description provided.' }}</p>
+    </div>
 
     <LoadingSpinner v-if="loading" />
 
-    <div v-else>
-      <h2 class="text-xl font-semibold text-neutral-300 mb-2">Tracks in Playlist</h2>
-      <table v-if="playlist.tracks.length" class="min-w-full table-auto text-neutral-300 shadow-lg bg-neutral-900 border-separate border-spacing-0">
-        <thead>
-          <tr class="text-neutral-400 text-left">
-            <th class="px-4 py-3 border border-r-0 rounded-tl-lg border-neutral-700">Track</th>
-            <th class="px-4 py-3 border border-x-0 border-neutral-700">Artist</th>
-            <th class="px-4 py-3 border border-x-0 border-neutral-700">Duration</th>
-            <th class="px-4 py-3 border border-x-0 border-neutral-700">Tags</th>
-            <th class="px-4 py-3 border border-x-0 border-r-1 rounded-tr-lg border-neutral-700">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(track, index) in playlist.tracks" :key="track.id">
-            <td
-              class="px-4 py-3 font-normal border-b-1 border-l-1 border-neutral-700"
-              :class="{ 'rounded-bl-lg': index === playlist.tracks.length - 1 }"
-            >
-              {{ track.title }}
-            </td>
-            <td class="px-4 py-2 border-b-1 border-neutral-700">{{ track.artist }}</td>
-            <td class="px-4 py-2 border-b-1 border-neutral-700">{{ formatDuration(track.length) }}</td>
-            <td class="px-4 py-2 border-b-1 border-neutral-700">
-              <span v-if="track.tags.length">{{ track.tags.join(", ") }}</span>
-              <span v-else class="text-gray-400">--</span>
-            </td>
-            <td
-              class="px-4 py-3 font-normal border-b border-r border-neutral-700"
-              :class="{ 'rounded-br-lg': index === playlist.tracks.length - 1 }"
-            >
-              <button
-                @click="showRemoveModal(track.id)"
-                class="text-neutral-500 font-semibold hover:cursor-pointer hover:text-neutral-400 transition ease-in-out"
-              >
-                Remove
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else-if="playlist">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-neutral-200">Tracks in Playlist</h2>
+        <div class="bg-neutral-800/50 rounded-lg px-4 py-2 border border-neutral-700/30">
+          <span class="text-neutral-400 text-sm">{{ playlist.tracks ? playlist.tracks.length : 0 }} tracks</span>
+        </div>
+      </div>
 
-      <p v-else class="text-neutral-400">No tracks have been added to this playlist yet.</p>
+      <div
+        v-if="playlist.tracks && playlist.tracks.length"
+        class="bg-neutral-900/60 backdrop-blur-lg border border-cyan-700/30 rounded-2xl shadow-xl overflow-hidden"
+      >
+        <!-- table header -->
+        <div class="bg-gradient-to-r from-neutral-800/80 to-cyan-900/60 px-6 py-4 border-b border-neutral-700/50">
+          <div class="grid grid-cols-12 gap-4 text-neutral-300 font-semibold text-sm">
+            <div class="col-span-4">Track</div>
+            <div class="col-span-3">Artist</div>
+            <div class="col-span-2">Duration</div>
+            <div class="col-span-2">Tags</div>
+            <div class="col-span-1 text-center">Action</div>
+          </div>
+        </div>
+
+        <!-- table body -->
+        <div class="divide-y divide-neutral-700/30">
+          <div v-for="(track, index) in playlist.tracks" :key="track.id" 
+                class="px-6 py-4 hover:bg-neutral-800/30 transition-colors duration-200 group">
+            <div class="grid grid-cols-12 gap-4 items-center">
+              <div class="col-span-4">
+                <div class="flex items-center gap-5">
+                  <div class="w-2 h-2 bg-cyan-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out"></div>
+                  <span class="text-neutral-200 font-medium truncate">{{ track.title }}</span>
+                </div>
+              </div>
+              <div class="col-span-3">
+                <span class="text-neutral-400 truncate">{{ track.artist }}</span>
+              </div>
+              <div class="col-span-2">
+                <span class="text-neutral-400">{{ formatDuration(track.length) }}</span>
+              </div>
+              <div class="col-span-2">
+                <div v-if="track.tags.length" class="flex flex-wrap gap-1">
+                  <span
+                    v-for="tag in track.tags.slice(0, 2)"
+                    :key="tag" 
+                    class="bg-neutral-800/60 px-2 py-1 rounded-full text-xs text-neutral-400 border border-neutral-700/50"
+                  >
+                    {{ tag }}
+                  </span>
+                  <span v-if="track.tags.length > 2" class="text-xs text-neutral-500">+{{ track.tags.length - 2 }}</span>
+                </div>
+                <span v-else class="text-neutral-500 text-sm">No tags</span>
+              </div>
+              <div class="col-span-1 text-center">
+                <button
+                  @click="showRemoveModal(track.id)"
+                  class="p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-300 group/remove opacity-0 group-hover:opacity-100 hover:cursor-pointer"
+                >
+                  <svg class="w-4 h-4 text-neutral-400 group-hover/remove:text-red-400 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- no tracks message -->
+      <div v-else class="text-center mt-16">
+        <div class="bg-neutral-900/60 backdrop-blur-lg border border-neutral-700/30 rounded-2xl p-12 shadow-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-16 text-neutral-500 mx-auto mb-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" />
+          </svg>
+
+          <h3 class="text-xl font-medium text-neutral-300 mb-2">No tracks yet</h3>
+          <p class="text-neutral-400">This playlist is empty. Add some tracks to get started!</p>
+        </div>
+      </div>
     </div>
   </div>
 
