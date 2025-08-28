@@ -158,19 +158,49 @@
 
       <!-- add to playlist modal -->
       <div v-else-if="modalMode === 'add'">
-        <div v-if="playlists.length" class="space-y-2">
-          <div class="space-y-2 max-h-60 overflow-y-auto">
+        <div v-if="playlists.length" class="space-y-3">
+          <div class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
             <!-- update the button class based on the selection state -->
             <button
               v-for="playlist in playlists"
               :key="playlist.id"
               @click="togglePlaylistSelection(playlist.id)"
               :class="[
-                'text-neutral-300 font-semibold px-4 py-2 rounded-lg w-full text-left border transition ease-in-out',
-                selected_playlist.includes(playlist.id) ? 'border-cyan-700 bg-cyan-900/20' : 'border-neutral-700 bg-neutral-800'
+                'group hover:cursor-pointer w-full text-left px-4 py-3 rounded-xl border transition-all duration-300 ease-out font-medium font-poppins relative overflow-hidden',
+                selected_playlist.includes(playlist.id) 
+                  ? 'border-cyan-400/60 bg-gradient-to-r from-cyan-900/30 to-blue-900/20 text-cyan-200 shadow-lg shadow-cyan-400/20' 
+                  : 'border-neutral-700/50 bg-neutral-800/60 text-neutral-300 hover:border-cyan-500/40 hover:bg-neutral-700/60 hover:text-cyan-300'
               ]"
             >
-              {{ playlist.name }}
+              <!-- content -->
+              <div class="relative flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="font-semibold text-sm mb-1 truncate">{{ playlist.name }}</div>
+                  <div class="text-xs opacity-75 truncate">
+                    {{ playlist.description || "No description" }}
+                  </div>
+                </div>
+                
+                <!-- track count badge -->
+                <div class="flex-shrink-0 ml-3">
+                  <div :class="[
+                    'px-2 py-1 rounded-full text-xs font-medium border',
+                    selected_playlist.includes(playlist.id)
+                      ? 'bg-cyan-400/20 border-cyan-400/40 text-cyan-300'
+                      : 'bg-neutral-700/50 border-neutral-600/50 text-neutral-400 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/40 group-hover:text-cyan-400'
+                  ]">
+                    {{ playlist.added_tracks_count }} {{ playlist.added_tracks_count === 1 ? 'track' : 'tracks' }}
+                  </div>
+                </div>
+                
+                <!-- selection indicator -->
+                <div v-if="selected_playlist.includes(playlist.id)" 
+                     class="flex-shrink-0 ml-2">
+                  <svg class="size-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
             </button>
           </div>
         </div>
