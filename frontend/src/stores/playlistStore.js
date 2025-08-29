@@ -4,7 +4,8 @@
  * @returns {Array} An array of playlists, or an empty array if none exist.
  */
 export function getPlaylists() {
-  return JSON.parse(localStorage.getItem('playlists')) || [];
+  const stored = localStorage.getItem('playlists');
+  return JSON.parse(stored) || [];
 }
 
 /**
