@@ -14,3 +14,7 @@ function jaccardSimilarity(setA, setB) {
   if (union.size === 0) return 0;
   return intersection.size / union.size;
 }
+
+module.exports = {
+  jaccardSimilarity,
+};
