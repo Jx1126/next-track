@@ -43,7 +43,8 @@ router.get('/search', async (req, res) => {
     const data = await createMusicBrainzRequest('recording', {
       query,
       limit: Math.min(limit, 100), // limit to max 100 results
-      offset: parseInt(offset)
+      offset: parseInt(offset),
+      inc: 'artist-credits+releases+tags'
     });
 
     // format the search results
