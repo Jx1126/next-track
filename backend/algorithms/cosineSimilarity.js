@@ -27,13 +27,20 @@ function cosineSimilarity(vectorA, vectorB) {
 }
 
 /**
- * Helper function to calculate average cosine similarity between candidate and playlist.
+ * Helper function to calculate comprehensive cosine similarity metrics.
  * @param  {Array<number>} candidateVector - Feature vector of candidate track.
  * @param  {Array<Array<number>>} playlistVectors - Feature vectors of playlist tracks.
- * @return {number} - Average similarity score.
+ * @return {Object} - Comprehensive similarity metrics.
  */
-function averageCosineSimilarity(candidateVector, playlistVectors) {
-  if (playlistVectors.length === 0) return 0;
+function comprehensiveCosineSimilarity(candidateVector, playlistVectors) {
+  // validation: must contain at least one playlist vector
+  if (playlistVectors.length === 0) {
+    return {
+      averageSimilarity: 0,
+      maxSimilarity: 0,
+      combinedScore: 0
+    };
+  }
 
   // calculate cosine similarity for each playlist vector
   const similarities = playlistVectors.map(playlistVector => 
@@ -42,28 +49,22 @@ function averageCosineSimilarity(candidateVector, playlistVectors) {
 
   const total = similarities.reduce((sum, sim) => sum + sim, 0); // sum all similarities
 
-  return total / similarities.length; // calculate average similarity
-}
+  // average and maximum similarity
+  const average = total / similarities.length;
+  const maximum = Math.max(...similarities);
 
-/**
- * Helper function to calculate maximum cosine similarity between candidate and playlist.
- * @param  {Array<number>} candidateVector - Feature vector of candidate track.
- * @param  {Array<Array<number>>} playlistVectors - Feature vectors of playlist tracks.
- * @return {number} - Maximum similarity score.
- */
-function maxCosineSimilarity(candidateVector, playlistVectors) {
-  if (playlistVectors.length === 0) return 0;
+  // combined score of average and maximum similarity with different weights
+  const combinedScore = 0.7 * average + 0.3 * maximum;
 
-  // calculate cosine similarity for each playlist vector
-  const similarities = playlistVectors.map(playlistVector => 
-    cosineSimilarity(candidateVector, playlistVector)
-  );
-
-  return Math.max(...similarities); // max similarity
+  return {
+    averageSimilarity: average,
+    maxSimilarity: maximum,
+    combinedScore: combinedScore,
+    similarities: similarities
+  };
 }
 
 module.exports = {
   cosineSimilarity,
-  averageCosineSimilarity,
-  maxCosineSimilarity,
+  comprehensiveCosineSimilarity
 };
