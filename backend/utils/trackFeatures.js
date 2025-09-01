@@ -22,10 +22,6 @@ function extractTrackFeatures(track) {
     // push tags into allTags if they exist and are arrays
     if (track.tags && Array.isArray(track.tags)) {
       allTags = [...track.tags];
-    } else if (track.genre && Array.isArray(track.genre)) {
-      allTags = [...track.genre];
-    } else if (track.genres && Array.isArray(track.genres)) {
-      allTags = [...track.genres];
     } else if (track.style && Array.isArray(track.style)) {
       allTags = [...track.style];
     }
@@ -88,11 +84,11 @@ function extractArtist(track) {
 }
 
 /**
- * Helper function to extract genres/tags from track.
+ * Helper function to extract tags from track.
  * @param {Object} track - Track object.
- * @return {Array}       - Array of genre/tag strings.
+ * @return {Array}       - Array of tag strings.
  */
-function extractGenres(track) {
+function extractTags(track) {
   if (!track) return []; // validation: must be a valid track object
   // extract features from track and filter out artist/album tags
   const features = extractTrackFeatures(track);
@@ -133,7 +129,7 @@ function extractDuration(track) {
 module.exports = {
   extractTrackFeatures,
   extractArtist,
-  extractGenres,
+  extractTags,
   extractYear,
   extractDuration
 };
