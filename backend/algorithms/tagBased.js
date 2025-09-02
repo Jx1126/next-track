@@ -5,11 +5,11 @@ const { comprehensiveJaccardSimilarity } = require('./jaccardSimilarity');
  * Helper function to recommend tracks based on tag similarity
  * @param {Array} candidateTracks - Tracks to recommend from.
  * @param {Array} playlistTracks - User's playlist tracks.
- * @returns {Object|null} Recommended track with metadata.
+ * @returns {Object|null} - Recommended track with metadata.
  */
 function recommendByTags(candidateTracks, playlistTracks) {
   try {
-    // Validate inputs
+    // validate inputs
     if (!candidateTracks || candidateTracks.length === 0) {
       return null;
     }
@@ -41,7 +41,7 @@ function recommendByTags(candidateTracks, playlistTracks) {
         }
         
         // calculate tag similarity using comprehensive Jaccard similarity function
-        // this now uses ALL playlist tracks instead of just aggregated tags
+        // this uses all playlist tracks instead of just aggregated tags
         const allPlaylistTags = playlistTracks.map(track => {
           const features = extractTrackFeatures(track);
           return features.allTags || [];
@@ -53,7 +53,7 @@ function recommendByTags(candidateTracks, playlistTracks) {
           0.4 * similarity.averageSimilarity +     // average similarity across all playlist tracks
           0.3 * similarity.aggregatedSimilarity +  // similarity to overall playlist profile  
           0.2 * similarity.weightedSimilarity +    // weighted similarity with partial matches
-          0.1 * similarity.maxSimilarity           // best match bonus
+          0.1 * similarity.maxSimilarity           // best match
         );
         
         return {
@@ -71,7 +71,7 @@ function recommendByTags(candidateTracks, playlistTracks) {
           }
         };
       } catch (error) {
-        console.error(`🏷️ Tag-based: Error scoring track ${track.title || 'unknown'}:`, error.message);
+        console.error(`Tag-based: Error scoring track ${track.title || 'unknown'}:`, error.message);
         return {
           track,
           score: 0,
@@ -97,7 +97,7 @@ function recommendByTags(candidateTracks, playlistTracks) {
     return selectedTrack;
     
   } catch (error) {
-    console.error('🏷️ Tag-based: Algorithm failed with error:', error);
+    console.error('Tag-based: Algorithm failed with error:', error);
     
     // fallback to random selection
     if (candidateTracks && candidateTracks.length > 0) {
@@ -109,7 +109,7 @@ function recommendByTags(candidateTracks, playlistTracks) {
 
 /**
  * Extract and aggregate tags from playlist tracks
- * @param {Array} tracks - Playlist tracks
+ * @param   {Array} tracks - Playlist tracks
  * @returns {Object} Tag profile with frequency analysis
  */
 function buildTagProfile(tracks) {
@@ -129,7 +129,7 @@ function buildTagProfile(tracks) {
           });
         }
       } catch (error) {
-        console.warn(`🏷️ Tag-based: Error extracting tags from track ${track.title || 'unknown'}:`, error.message);
+        console.warn(`Tag-based: Error extracting tags from track ${track.title || 'unknown'}:`, error.message);
       }
     });
     
@@ -144,7 +144,7 @@ function buildTagProfile(tracks) {
       totalTags: allTags.length
     };
   } catch (error) {
-    console.error('🏷️ Tag-based: Error building tag profile:', error);
+    console.error('Tag-based: Error building tag profile:', error);
     return {
       allTags: [],
       sortedTagsSet: [],
