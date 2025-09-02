@@ -7,7 +7,7 @@ const { generateYoutubeLink } = require('./youtubeLinkGenerator');
  * @param {Object} preferences - User preferences for track recommendation.
  * @return {Promise<Object>}   - A promise that resolves to a recommended track object with the YouTube link.
  */
-async function generateTrackRecommendation(tracks, preferences) {
+async function generateRecommendation(tracks, preferences) {
   // validation: must have at least one track
   if (!tracks.length === 0) {
     throw new  Error('No tracks available for recommendation');

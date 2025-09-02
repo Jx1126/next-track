@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { generateTrackRecommendation } = require('../utils/recommendationEngine'); // import the recommendation generation function
+const { generateRecommendation } = require('../utils/recommendationEngine');
 
 /**
- * @route   POST /api/music/recommend/
- * @desc    Generate a track recommendation based on the provided playlist and user preferences
- * @body    playlist (required) - Current playlist object
- * @body    preferences (optional) - User preferences
+ * @route  POST /api/music/recommend/
+ * @desc   Generate a track recommendation based on the provided playlist
+ * @body   playlist (required) - Current playlist object
+ * @body   algorithm (required) - Recommendation algorithm to use
  * @returns {Object} - JSON object containing the recommended track and playlist details
  */
 router.post('/', async (req, res) => {
   try {
-    const { playlist, preferences = {} } = req.body;
+    const { playlist, algorithm } = req.body;
 
     // validation: playlist is required
     if (!playlist) {
@@ -26,8 +26,8 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // generate a track recommendation based on the playlist tracks and user preferences
-    const recommended_track = await generateTrackRecommendation(playlist.tracks, preferences);
+    // generate a track recommendation based on the playlist tracks
+    const recommended_track = await generateRecommendation(playlist.tracks, algorithm);
 
     // validation: recommended track must exist
     if (!recommended_track) {
@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
         added_tracks_count: playlist.tracks.length,
         last_updated: playlist.last_updated,
       },
-      preferences,
+      algorithm_used: recommended_track.algorithm_used,
       recommended_track,
       recommended_at: new Date().toISOString(),
     });
