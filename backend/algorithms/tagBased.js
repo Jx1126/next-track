@@ -5,9 +5,10 @@ const { comprehensiveJaccardSimilarity } = require('./jaccardSimilarity');
  * Helper function to recommend tracks based on tag similarity
  * @param {Array} candidateTracks - Tracks to recommend from.
  * @param {Array} playlistTracks - User's playlist tracks.
+ * @param {number} timestamp - Random seed for deterministic results.
  * @returns {Object|null} - Recommended track with metadata.
  */
-function recommendByTags(candidateTracks, playlistTracks) {
+function recommendByTags(candidateTracks, playlistTracks, timestamp = Date.now()) {
   try {
     // validate inputs
     if (!candidateTracks || candidateTracks.length === 0) {
@@ -15,14 +16,16 @@ function recommendByTags(candidateTracks, playlistTracks) {
     }
     
     if (!playlistTracks || playlistTracks.length === 0) {
-      return candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
+      const randomIndex = (timestamp + Math.floor(Math.random() * candidateTracks.length)) % candidateTracks.length;
+      return candidateTracks[randomIndex];
     }
     
     // extract and aggregate tags from playlist
     const playlistTagProfile = buildTagProfile(playlistTracks);
     
     if (!playlistTagProfile || playlistTagProfile.allTags.length === 0) {
-      return candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
+      const randomIndex = (timestamp + Math.floor(Math.random() * candidateTracks.length)) % candidateTracks.length;
+      return candidateTracks[randomIndex];
     }
     
     // score candidates based on tag similarity
@@ -85,7 +88,8 @@ function recommendByTags(candidateTracks, playlistTracks) {
     const validTracks = scoredTracks.filter(item => item.score > 0);
     
     if (validTracks.length === 0) {
-      return candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
+      const randomIndex = (timestamp + Math.floor(Math.random() * candidateTracks.length)) % candidateTracks.length;
+      return candidateTracks[randomIndex];
     }
     
     // sort by score (descending)
@@ -101,7 +105,8 @@ function recommendByTags(candidateTracks, playlistTracks) {
     
     // fallback to random selection
     if (candidateTracks && candidateTracks.length > 0) {
-      return candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
+      const randomIndex = (timestamp + Math.floor(Math.random() * candidateTracks.length)) % candidateTracks.length;
+      return candidateTracks[randomIndex];
     }
     return null;
   }
