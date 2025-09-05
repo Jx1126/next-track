@@ -44,6 +44,8 @@ router.post('/', async (req, res) => {
         last_updated: playlist.last_updated,
       },
       algorithm_used: recommended_track.algorithm_used,
+      similarity_score: recommended_track.similarity_score,
+      explanation: recommended_track.explanation,
       recommended_track,
       recommended_at: new Date().toISOString(),
     });
