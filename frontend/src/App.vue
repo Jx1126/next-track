@@ -1,5 +1,5 @@
 <template>
-  <div class="smooth-scroll relative" style="background-color: #0A0A0A;">
+  <div class="relative" style="background-color: #0A0A0A;">
     <!-- navigation bar -->
     <NavBar />
 
