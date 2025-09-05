@@ -21,7 +21,7 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
     const features = extractTrackFeatures(track);
     return [
       features.durationMs / 1000000, // normalise duration
-      features.yearNormalized,
+      features.yearNormalised,
       features.artistTags.length,
       features.albumTags.length,
       features.decadeTags.length
@@ -53,7 +53,7 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
     if (playlistVectors.length > 0) {
       const candidateVector = [
         trackFeatures.durationMs / 1000000, // normalise duration
-        trackFeatures.yearNormalized,
+        trackFeatures.yearNormalised,
         trackFeatures.artistTags.length,
         trackFeatures.albumTags.length,
         trackFeatures.decadeTags.length
@@ -116,7 +116,7 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
 }
 
 /**
- * Help function to build duration profile from playlist tracks
+ * Helper function to build duration profile from playlist tracks
  * @param {Array} tracks - Playlist tracks.
  * @returns {Object} Duration profile with statistics.
  */
