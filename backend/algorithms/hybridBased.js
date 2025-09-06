@@ -38,7 +38,7 @@ function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
       recommendations.length = recommendByLength(candidateTracks, playlistTracks, timestamp);
     }
   } catch (error) {
-    console.warn(`🔀 Hybrid: Error in sub-algorithm: ${error.message}`);
+    console.warn(`Hybrid: Error in sub-algorithm: ${error.message}`);
   }
   
   // aggregate scores using weighted fusion
