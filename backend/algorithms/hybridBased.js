@@ -63,11 +63,29 @@ function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
     ...selectedTrack,
     similarity_score: selectedTrack.hybridScore.toFixed(3),
     algorithm_details: {
-      hybrid_fusion: {
-        algorithm_weights: algorithmWeights,
-        contributing_algorithms: selectedTrack.contributingAlgorithms,
-        component_scores: selectedTrack.componentScores,
-        diversity_bonus: selectedTrack.diversityBonus || 0
+      algorithm_weights: algorithmWeights,
+      contributing_algorithms: selectedTrack.contributingAlgorithms,
+      component_scores: selectedTrack.componentScores,
+      diversity_bonus: selectedTrack.diversityBonus || 0,
+      consensus_bonus: selectedTrack.consensusBonus || 0,
+      fusion_score: selectedTrack.hybridScore,
+      playlist_characteristics: {
+        artist_diversity: playlistProfile.artistDiversity.toFixed(3),
+        tag_diversity: playlistProfile.tagDiversity.toFixed(3),
+        temporal_spread: playlistProfile.temporalSpread.toFixed(3),
+        length_variability: playlistProfile.lengthVariability.toFixed(3),
+        playlist_size: playlistProfile.size
+      },
+      fusion_methodology: {
+        base_weights: { artist: 0.25, tags: 0.25, temporal: 0.25, length: 0.25 },
+        adaptive_adjustments: getWeightAdjustments(playlistProfile),
+        consensus_factor: selectedTrack.contributingAlgorithms.length / 4.0,
+        diversity_factor: selectedTrack.diversityBonus || 0
+      },
+      recommendation_context: {
+        total_candidates: hybridScores.length,
+        top_candidates_pool: topCandidates.length,
+        selected_rank: getTrackRank(selectedTrack, hybridScores)
       }
     }
   };
@@ -355,6 +373,31 @@ function selectRandomTrack(tracks, timestamp) {
       }
     }
   };
+}
+
+/**
+ * Helper function to get weight adjustments for display
+ * @param   {Object} profile - Playlist characteristics
+ * @returns {Object} Weight adjustments
+ */
+function getWeightAdjustments(profile) {
+  return {
+    artist_adjustment: profile.artistDiversity < 0.3 ? '+20%' : profile.artistDiversity > 0.8 ? '-10%' : '0%',
+    tag_adjustment: profile.tagDiversity < 0.5 ? '+15%' : profile.tagDiversity > 1.5 ? '-10%' : '0%',
+    temporal_adjustment: profile.temporalSpread < 0.1 ? '+10%' : profile.temporalSpread > 0.5 ? '-5%' : '0%',
+    length_adjustment: profile.lengthVariability < 0.2 ? '+10%' : profile.lengthVariability > 0.5 ? '-5%' : '0%'
+  };
+}
+
+/**
+ * Helper function to get track rank in hybrid scores
+ * @param   {Object} selectedTrack - Selected track
+ * @param   {Array} hybridScores - All scored tracks
+ * @returns {number} Rank position
+ */
+function getTrackRank(selectedTrack, hybridScores) {
+  const trackKey = `${selectedTrack.title}-${selectedTrack.artist}`;
+  return hybridScores.findIndex(track => `${track.track.title}-${track.track.artist}` === trackKey) + 1;
 }
 
 module.exports = {
