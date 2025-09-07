@@ -71,11 +71,23 @@ function recommendByTemporal(candidateTracks, playlistTracks, timestamp) {
     ...selectedTrack,
     similarity_score: selectedTrack.temporalScore.toFixed(3),
     algorithm_details: {
-      score_breakdown: {
-        track_year: selectedTrack.trackYear,
-        playlist_avg_year: playlistTemporalProfile.avgYear,
-        year_distance: Math.abs(selectedTrack.trackYear - playlistTemporalProfile.avgYear),
-        era_match: calculateEraMatch(selectedTrack.trackYear, playlistTemporalProfile.avgYear)
+      track_year: selectedTrack.trackYear,
+      playlist_avg_year: playlistTemporalProfile.avgYear,
+      year_distance: Math.abs(selectedTrack.trackYear - playlistTemporalProfile.avgYear),
+      era_match: calculateEraMatch(selectedTrack.trackYear, playlistTemporalProfile.avgYear),
+      temporal_score: selectedTrack.temporalScore,
+      year_spread: playlistTemporalProfile.yearSpread,
+      playlist_year_range: {
+        min: playlistTemporalProfile.minYear,
+        max: playlistTemporalProfile.maxYear
+      },
+      decade_distribution: getDominantDecades(playlistTemporalProfile.decadeDistribution),
+      track_decade: Math.floor(selectedTrack.trackYear / 10) * 10,
+      gaussian_sigma: Math.max(playlistTemporalProfile.yearSpread, 5),
+      similarity_components: {
+        gaussian_similarity: calculateTemporalSimilarity(selectedTrack.trackYear, playlistTemporalProfile).toFixed(3),
+        era_bonus: calculateEraBonus(selectedTrack.trackYear, playlistTemporalProfile.avgYear).toFixed(3),
+        decade_bonus: calculateDecadeBonus(selectedTrack.trackYear, playlistTemporalProfile.decadeDistribution).toFixed(3)
       }
     }
   };
@@ -234,6 +246,19 @@ function selectRandomTrack(tracks, timestamp) {
       }
     }
   };
+}
+
+/**
+ * Helper function to get dominant decades from distribution
+ * @param   {Map} decadeDistribution - Distribution of decades
+ * @returns {Array} Top 3 decades with counts
+ */
+function getDominantDecades(decadeDistribution) {
+  const sorted = Array.from(decadeDistribution.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  
+  return sorted.map(([decade, count]) => ({ decade, count }));
 }
 
 module.exports = {
