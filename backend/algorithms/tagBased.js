@@ -96,9 +96,44 @@ function recommendByTags(candidateTracks, playlistTracks, timestamp = Date.now()
     validTracks.sort((a, b) => b.score - a.score);
     
     // return the best match
-    const selectedTrack = validTracks[0].track;
+    const selectedItem = validTracks[0];
+    const selectedTrack = selectedItem.track;
     
-    return selectedTrack;
+    return {
+      ...selectedTrack,
+      similarity_score: selectedItem.score.toFixed(3),
+      explanation: `Tag-based match with ${selectedItem.matchedTags.length} shared characteristics`,
+      algorithm_details: {
+        matched_tags: selectedItem.matchedTags.slice(0, 5), // top 5 matched tags
+        exact_matches: selectedItem.details.exactMatches || 0,
+        partial_matches: selectedItem.details.partialMatches || 0,
+        average_similarity: selectedItem.details.averageSimilarity || 0,
+        weighted_similarity: selectedItem.details.weightedSimilarity || 0,
+        track_tags_count: selectedItem.details.trackTags ? selectedItem.details.trackTags.length : 0,
+        aggregated_similarity: selectedItem.details.aggregatedSimilarity || 0,
+        max_similarity: selectedItem.details.maxSimilarity || 0,
+        all_matched_tags: selectedItem.matchedTags, // all matched tags
+        playlist_tag_profile: {
+          total_unique_tags: playlistTagProfile.allTags.length,
+          total_tags: playlistTagProfile.totalTags,
+          most_frequent_tags: playlistTagProfile.sortedTagsSet.slice(0, 3)
+        },
+        similarity_components: {
+          jaccard_base: (selectedItem.details.averageSimilarity * 0.4).toFixed(3),
+          aggregated_weight: (selectedItem.details.aggregatedSimilarity * 0.3).toFixed(3),
+          weighted_component: (selectedItem.details.weightedSimilarity * 0.2).toFixed(3),
+          max_match_bonus: (selectedItem.details.maxSimilarity * 0.1).toFixed(3)
+        },
+        recommendation_context: {
+          total_candidates: validTracks.length,
+          rank_position: 1,
+          score_range: {
+            highest: validTracks[0].score.toFixed(3),
+            lowest: validTracks[validTracks.length - 1].score.toFixed(3)
+          }
+        }
+      }
+    };
     
   } catch (error) {
     console.error('Tag-based: Algorithm failed with error:', error);
