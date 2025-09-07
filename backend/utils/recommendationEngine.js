@@ -77,6 +77,9 @@ async function generateRecommendation(tracks, algorithmType = 'hybrid') {
   let recommended_track;
   const timestamp = Date.now();
 
+  // track processing time
+  const startTime = process.hrtime.bigint();
+  
   try {
     switch (selectedAlgorithm) {
       case ALGORITHM_TYPES.HYBRID:
@@ -105,6 +108,10 @@ async function generateRecommendation(tracks, algorithmType = 'hybrid') {
     recommended_track = recommendByRandom(filteredTracks, timestamp);
   }
 
+  // calculate processing time
+  const endTime = process.hrtime.bigint();
+  const processingTimeMs = Number(endTime - startTime) / 1_000_000; // convert nanoseconds to milliseconds
+
   if (!recommended_track) {
     console.warn('No recommendation generated');
     return null;
@@ -117,7 +124,11 @@ async function generateRecommendation(tracks, algorithmType = 'hybrid') {
     ...recommended_track,
     youtube_link,
     algorithm_used: selectedAlgorithm,
-    recommended_at: new Date().toISOString()
+    recommended_at: new Date().toISOString(),
+    algorithm_details: {
+      ...(recommended_track.algorithm_details || {}),
+      processing_time: Math.round(processingTimeMs * 100) / 100 // round to 2 decimal places
+    }
   };
 }
 
