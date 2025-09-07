@@ -75,10 +75,27 @@ function recommendByArtist(candidateTracks, playlistTracks, timestamp) {
       similarity_score: selectedItem.artistScore.toFixed(3),
       explanation: selectedItem.explanation,
       algorithm_details: {
-        score_breakdown: {
-          artist_similarity: selectedItem.artistScore,
-          playlist_artists: uniquePlaylistArtists,
-          match_type: selectedItem.matchType
+        artist_similarity: selectedItem.artistScore,
+        playlist_artists: uniquePlaylistArtists,
+        match_type: selectedItem.matchType,
+        playlist_artists_count: uniquePlaylistArtists.length,
+        track_artist: selectedTrack.artist,
+        artist_diversity: uniquePlaylistArtists.length / playlistTracks.length,
+        discovery_factor: selectedItem.matchType === 'discovery' ? 1.0 : 
+                         selectedItem.matchType === 'same_artist' ? 0.2 :
+                         selectedItem.matchType === 'similar_artist' ? 0.7 : 0.5,
+        similarity_breakdown: {
+          base_score: selectedItem.artistScore > 0.3 ? selectedItem.artistScore - 0.1 : selectedItem.artistScore,
+          random_factor: 0.1,
+          final_score: selectedItem.artistScore
+        },
+        recommendation_context: {
+          total_candidates: scoredTracks.length,
+          rank_position: 1,
+          score_range: {
+            highest: scoredTracks[0].artistScore.toFixed(3),
+            lowest: scoredTracks[scoredTracks.length - 1].artistScore.toFixed(3)
+          }
         }
       }
     };
