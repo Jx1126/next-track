@@ -12,7 +12,71 @@ function recommendByTemporal(candidateTracks, playlistTracks, timestamp) {
   const playlistTemporalProfile = buildTemporalProfile(playlistTracks);
   
   if (!playlistTemporalProfile.hasValidDates) {
-    return selectRandomTrack(candidateTracks, timestamp);
+    // fallback: use candidate track years and estimate temporal relevance
+    const candidateYears = candidateTracks
+      .map(track => extractYear(track))
+      .filter(year => year > 0);
+    
+    if (candidateYears.length === 0) {
+      const randomTrack = selectRandomTrack(candidateTracks, timestamp);
+      return {
+        ...randomTrack,
+        similarity_score: '0.000',
+        algorithm_details: {
+          track_year: 'Unknown',
+          playlist_avg_year: 'Unknown', 
+          year_distance: 0,
+          era_match: 'unknown',
+          temporal_score: 0.000,
+          year_spread: 0,
+          fallback_reason: 'No valid years found in playlist or candidate tracks'
+        }
+      };
+    }
+    
+    // use modern era as baseline (last 20 years)
+    const currentYear = new Date().getFullYear();
+    
+    const scoredTracks = candidateTracks.map(track => {
+      const trackYear = extractYear(track);
+      const score = trackYear > 0 ? Math.max(0, 1 - Math.abs(trackYear - currentYear) / 50) : 0;
+      return { ...track, temporalScore: score, trackYear };
+    });
+    
+    const validTracks = scoredTracks.filter(track => track.temporalScore > 0);
+    if (validTracks.length === 0) {
+      const randomTrack = selectRandomTrack(candidateTracks, timestamp);
+      return {
+        ...randomTrack,
+        similarity_score: '0.000',
+        algorithm_details: {
+          track_year: 'Unknown',
+          playlist_avg_year: 'Legacy playlist (no year data)',
+          year_distance: 0,
+          era_match: 'unknown', 
+          temporal_score: 0.000,
+          year_spread: 0,
+          fallback_reason: 'No temporal scoring possible'
+        }
+      };
+    }
+    
+    validTracks.sort((a, b) => b.temporalScore - a.temporalScore);
+    const selectedTrack = validTracks[0];
+    
+    return {
+      ...selectedTrack,
+      similarity_score: selectedTrack.temporalScore.toFixed(3),
+      algorithm_details: {
+        track_year: selectedTrack.trackYear || 'Unknown',
+        playlist_avg_year: 'Legacy playlist (no year data)',
+        year_distance: 0,
+        era_match: 'modern era preference',
+        temporal_score: selectedTrack.temporalScore,
+        year_spread: 0,
+        fallback_reason: 'Using recency preference for legacy playlist without year data'
+      }
+    };
   }
   
   // score candidates based on temporal similarity
@@ -99,6 +163,11 @@ function recommendByTemporal(candidateTracks, playlistTracks, timestamp) {
  * @returns {Object} Temporal profile with statistics.
  */
 function buildTemporalProfile(tracks) {
+  // validation: tracks must be a non-empty array
+  if (!tracks || !Array.isArray(tracks) || tracks.length === 0) {
+    return { hasValidDates: false };
+  }
+  
   const years = tracks
     .map(track => extractYear(track))
     .filter(year => year > 0);
