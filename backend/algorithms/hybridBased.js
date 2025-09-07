@@ -12,6 +12,17 @@ const { extractTrackFeatures } = require('../utils/trackFeatures');
  * @returns {Object|null} Recommended track with metadata.
  */
 function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
+  // validation: candidateTracks and playlistTracks must be non-empty arrays
+  if (!candidateTracks || !Array.isArray(candidateTracks) || candidateTracks.length === 0) {
+    console.warn('Hybrid: Invalid candidateTracks provided:', candidateTracks);
+    return null;
+  }
+  
+  if (!playlistTracks || !Array.isArray(playlistTracks) || playlistTracks.length === 0) {
+    console.warn('Hybrid: Invalid playlistTracks provided:', playlistTracks);
+    return null;
+  }
+  
   // analyse playlist characteristics to determine algorithm weights
   const playlistProfile = analysePlaylistCharacteristics(playlistTracks);
   const algorithmWeights = calculateAlgorithmWeights(playlistProfile);
@@ -26,21 +37,37 @@ function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
   
   try {
     if (algorithmWeights.artist > 0) {
-      recommendations.artist = recommendByArtist(candidateTracks, playlistTracks, timestamp);
+      try {
+        recommendations.artist = recommendByArtist(candidateTracks, playlistTracks, timestamp);
+      } catch (error) {
+        recommendations.artist = null;
+      }
     }
     if (algorithmWeights.tags > 0) {
-      recommendations.tags = recommendByTags(candidateTracks, playlistTracks, timestamp);
+      try {
+        recommendations.tags = recommendByTags(candidateTracks, playlistTracks, timestamp);
+      } catch (error) {
+        recommendations.tags = null;
+      }
     }
     if (algorithmWeights.temporal > 0) {
-      recommendations.temporal = recommendByTemporal(candidateTracks, playlistTracks, timestamp);
+      try {
+        recommendations.temporal = recommendByTemporal(candidateTracks, playlistTracks, timestamp);
+      } catch (error) {
+        recommendations.temporal = null;
+      }
     }
     if (algorithmWeights.length > 0) {
-      recommendations.length = recommendByLength(candidateTracks, playlistTracks, timestamp);
+      try {
+        recommendations.length = recommendByLength(candidateTracks, playlistTracks, timestamp);
+      } catch (error) {
+        recommendations.length = null;
+      }
     }
   } catch (error) {
     console.warn(`Hybrid: Error in sub-algorithm: ${error.message}`);
   }
-  
+
   // aggregate scores using weighted fusion
   const hybridScores = calculateHybridScores(
     recommendations,
@@ -48,7 +75,7 @@ function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
     playlistTracks
   );
   
-  if (hybridScores.length === 0) {
+  if (!hybridScores || hybridScores.length === 0) {
     return selectRandomTrack(candidateTracks, timestamp);
   }
   
@@ -57,38 +84,52 @@ function recommendByHybrid(candidateTracks, playlistTracks, timestamp) {
   
   // select from top candidates with diversity consideration
   const topCandidates = hybridScores.slice(0, Math.min(8, hybridScores.length));
-  const selectedTrack = selectDiverseCandidate(topCandidates, playlistTracks, timestamp);
   
-  return {
-    ...selectedTrack,
-    similarity_score: selectedTrack.hybridScore.toFixed(3),
-    algorithm_details: {
-      algorithm_weights: algorithmWeights,
-      contributing_algorithms: selectedTrack.contributingAlgorithms,
-      component_scores: selectedTrack.componentScores,
-      diversity_bonus: selectedTrack.diversityBonus || 0,
-      consensus_bonus: selectedTrack.consensusBonus || 0,
-      fusion_score: selectedTrack.hybridScore,
-      playlist_characteristics: {
-        artist_diversity: playlistProfile.artistDiversity.toFixed(3),
-        tag_diversity: playlistProfile.tagDiversity.toFixed(3),
-        temporal_spread: playlistProfile.temporalSpread.toFixed(3),
-        length_variability: playlistProfile.lengthVariability.toFixed(3),
-        playlist_size: playlistProfile.size
-      },
-      fusion_methodology: {
-        base_weights: { artist: 0.25, tags: 0.25, temporal: 0.25, length: 0.25 },
-        adaptive_adjustments: getWeightAdjustments(playlistProfile),
-        consensus_factor: selectedTrack.contributingAlgorithms.length / 4.0,
-        diversity_factor: selectedTrack.diversityBonus || 0
-      },
-      recommendation_context: {
-        total_candidates: hybridScores.length,
-        top_candidates_pool: topCandidates.length,
-        selected_rank: getTrackRank(selectedTrack, hybridScores)
+  const selectedTrack = selectDiverseCandidate(topCandidates, playlistTracks, timestamp);
+  if (!selectedTrack) {
+    return selectRandomTrack(candidateTracks, timestamp);
+  }
+  
+  try {
+    // Track all algorithms that were attempted for fusion (regardless of whether they recommended this specific track)
+    const allUsedAlgorithms = Object.keys(algorithmWeights).filter(alg => algorithmWeights[alg] > 0);
+    
+    const result = {
+      ...selectedTrack,
+      similarity_score: selectedTrack.hybridScore.toFixed(3),
+      algorithm_details: {
+        algorithm_weights: algorithmWeights,
+        contributing_algorithms: allUsedAlgorithms, // Show all algorithms used in fusion
+        component_scores: selectedTrack.componentScores,
+        diversity_bonus: selectedTrack.diversityBonus || 0,
+        consensus_bonus: selectedTrack.consensusBonus || 0,
+        fusion_score: selectedTrack.hybridScore,
+        playlist_characteristics: {
+          artist_diversity: playlistProfile.artistDiversity.toFixed(3),
+          tag_diversity: playlistProfile.tagDiversity.toFixed(3),
+          temporal_spread: playlistProfile.temporalSpread.toFixed(3),
+          length_variability: playlistProfile.lengthVariability.toFixed(3),
+          playlist_size: playlistProfile.size
+        },
+        fusion_methodology: {
+          base_weights: { artist: 0.25, tags: 0.25, temporal: 0.25, length: 0.25 },
+          adaptive_adjustments: getWeightAdjustments(playlistProfile),
+          consensus_factor: (selectedTrack.contributingAlgorithms || []).length / 4.0,
+          diversity_factor: selectedTrack.diversityBonus || 0
+        },
+        recommendation_context: {
+          total_candidates: hybridScores.length,
+          top_candidates_pool: topCandidates.length,
+          selected_rank: getTrackRank(selectedTrack, hybridScores)
+        }
       }
-    }
-  };
+    };
+    
+    return result;
+  } catch (error) {
+    console.error('Hybrid: Error creating result object:', error.message);
+    throw error;
+  }
 }
 
 /**
@@ -115,7 +156,9 @@ function analysePlaylistCharacteristics(playlistTracks) {
   const allTags = new Set();
   playlistTracks.forEach(track => {
     const features = extractTrackFeatures(track);
-    features.allTags.forEach(tag => allTags.add(tag));
+    if (features && features.allTags && Array.isArray(features.allTags)) {
+      features.allTags.forEach(tag => allTags.add(tag));
+    }
   });
   const tagDiversity = allTags.size / Math.max(playlistTracks.length, 1);
   
@@ -123,7 +166,7 @@ function analysePlaylistCharacteristics(playlistTracks) {
   const years = playlistTracks
     .map(track => {
       const features = extractTrackFeatures(track);
-      return features.releaseYear;
+      return features.year;
     })
     .filter(year => year > 0);
   
@@ -201,11 +244,14 @@ function calculateAlgorithmWeights(profile) {
   // normalise weights to sum
   const totalWeight = artistWeight + tagWeight + temporalWeight + lengthWeight;
   
+  // ensure minimum weights so all algorithms participate in hybrid fusion
+  const minWeight = 0.05; // minimum 5% weight for each algorithm
+  
   return {
-    artist: Math.max(0.05, artistWeight / totalWeight),
-    tags: Math.max(0.05, tagWeight / totalWeight),
-    temporal: Math.max(0.05, temporalWeight / totalWeight),
-    length: Math.max(0.05, lengthWeight / totalWeight)
+    artist: Math.max(minWeight, artistWeight / totalWeight),
+    tags: Math.max(minWeight, tagWeight / totalWeight),
+    temporal: Math.max(minWeight, temporalWeight / totalWeight),
+    length: Math.max(minWeight, lengthWeight / totalWeight)
   };
 }
 
@@ -217,25 +263,41 @@ function calculateAlgorithmWeights(profile) {
  * @returns {Array} tracks with hybrid scores
  */
 function calculateHybridScores(recommendations, weights, playlistTracks) {
+  // ensure inputs are valid
+  if (!recommendations || !weights || !playlistTracks) {
+    return [];
+  }
+  
   const trackScoreMap = new Map();
   
   // collect scores from each algorithm
   Object.entries(recommendations).forEach(([algorithm, recommendation]) => {
-    if (recommendation && recommendation.similarity_score) {
-      const score = parseFloat(recommendation.similarity_score);
-      const trackKey = `${recommendation.title}-${recommendation.artist}`;
-      
-      if (!trackScoreMap.has(trackKey)) {
-        trackScoreMap.set(trackKey, {
-          track: recommendation,
-          scores: {},
-          contributingAlgorithms: []
-        });
+    try {
+      if (recommendation && recommendation.similarity_score) {
+        const score = parseFloat(recommendation.similarity_score);
+        
+        // ensure the recommendation has required properties
+        if (!recommendation.title || !recommendation.artist) {
+          console.warn(`Hybrid: Invalid recommendation from ${algorithm} algorithm - missing title or artist`, recommendation);
+          return;
+        }
+        
+        const trackKey = `${recommendation.title}-${recommendation.artist}`;
+        
+        if (!trackScoreMap.has(trackKey)) {
+          trackScoreMap.set(trackKey, {
+            track: recommendation,
+            scores: {},
+            contributingAlgorithms: []
+          });
+        }
+        
+        const trackData = trackScoreMap.get(trackKey);
+        trackData.scores[algorithm] = score;
+        trackData.contributingAlgorithms.push(algorithm);
       }
-      
-      const trackData = trackScoreMap.get(trackKey);
-      trackData.scores[algorithm] = score;
-      trackData.contributingAlgorithms.push(algorithm);
+    } catch (error) {
+      console.warn(`calculateHybridScores: Error processing ${algorithm}:`, error.message);
     }
   });
   
@@ -298,22 +360,26 @@ function calculateDiversityBonus(track, playlistTracks) {
   const playlistTags = new Set();
   playlistTracks.forEach(t => {
     const features = extractTrackFeatures(t);
-    features.tags.forEach(g => playlistTags.add(g));
+    if (features && features.allTags && Array.isArray(features.allTags)) {
+      features.allTags.forEach(g => playlistTags.add(g));
+    }
   });
   
-  const hasNewTag = trackFeatures.tags.some(tag => !playlistTags.has(tag));
+  const hasNewTag = trackFeatures.allTags && Array.isArray(trackFeatures.allTags) 
+    ? trackFeatures.allTags.some(tag => !playlistTags.has(tag))
+    : false;
   const tagBonus = hasNewTag ? 0.03 : 0;
   
   // temporal diversity bonus
   const playlistYears = playlistTracks
-    .map(t => extractTrackFeatures(t).releaseYear)
+    .map(t => extractTrackFeatures(t).year)
     .filter(year => year > 0);
   
   const avgYear = playlistYears.length > 0 
     ? playlistYears.reduce((sum, year) => sum + year, 0) / playlistYears.length 
     : 0;
   
-  const yearDiff = Math.abs(trackFeatures.releaseYear - avgYear);
+  const yearDiff = Math.abs(trackFeatures.year - avgYear);
   const temporalBonus = yearDiff > 10 ? 0.02 : 0;
   
   return Math.min(0.2, artistBonus + tagBonus + temporalBonus);
@@ -397,7 +463,7 @@ function getWeightAdjustments(profile) {
  */
 function getTrackRank(selectedTrack, hybridScores) {
   const trackKey = `${selectedTrack.title}-${selectedTrack.artist}`;
-  return hybridScores.findIndex(track => `${track.track.title}-${track.track.artist}` === trackKey) + 1;
+  return hybridScores.findIndex(track => `${track.title}-${track.artist}` === trackKey) + 1;
 }
 
 module.exports = {
