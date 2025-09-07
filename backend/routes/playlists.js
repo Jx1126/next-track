@@ -113,6 +113,7 @@ router.post('/add', async (req, res) => {
       artist: data['artist-credit']?.[0]?.name || 'Unknown Artist',
       artist_id: data['artist-credit']?.[0]?.artist?.id,
       length: data.length ? Math.round(data.length / 1000) : 0, // length in seconds
+      release_date: data.releases && data.releases[0] ? data.releases[0].date : null, // add release date
       added_at : new Date().toISOString(),
       tags: data.tags?.map(tag => tag.name) || [],
     };

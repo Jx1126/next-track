@@ -35,8 +35,23 @@ function extractTrackFeatures(track) {
       allTags.push(`album:${track.album.toLowerCase()}`);
     }
     // push year/decade tags if available
-    if (track.year || track.release_year || track.date) {
-      const year = track.year || track.release_year || new Date(track.date).getFullYear();
+    let year = null;
+    if (track.year || track.release_year || track.release_date || track.date) {
+      if (track.year && !isNaN(track.year)) {
+        year = parseInt(track.year);
+      } else if (track.release_year && !isNaN(track.release_year)) {
+        year = parseInt(track.release_year);
+      } else if (track.release_date) {
+        // handle MusicBrainz release_date format: "2020", "2020-05", "2020-05-15"
+        const dateStr = track.release_date.toString();
+        const yearFromDate = parseInt(dateStr.substring(0, 4));
+        if (!isNaN(yearFromDate) && yearFromDate > 1900 && yearFromDate <= new Date().getFullYear()) {
+          year = yearFromDate;
+        }
+      } else if (track.date) {
+        year = new Date(track.date).getFullYear();
+      }
+      
       if (year && !isNaN(year)) {
         const decade = Math.floor(year / 10) * 10; // decade tag
         allTags.push(`decade:${decade}s`);
@@ -55,7 +70,7 @@ function extractTrackFeatures(track) {
       artist: track.artist || '',
       album: track.album || '',
       title: track.title || '',
-      year: track.year || track.release_year || null,
+      year: year || track.year || track.release_year || null,
       duration: track.duration || track.length || null,
       originalTrack: track
     };
@@ -102,14 +117,27 @@ function extractTags(track) {
  */
 function extractYear(track) {
   if (!track) return null; // validation: must be a valid track object
+  
   // extract year, release year from track
   if (track.year && !isNaN(track.year)) return parseInt(track.year);
   if (track.release_year && !isNaN(track.release_year)) return parseInt(track.release_year);
+  
+  // extract year from release_date field (MusicBrainz format)
+  if (track.release_date) {
+    // handle different date formats: "2020", "2020-05", "2020-05-15"
+    const dateStr = track.release_date.toString();
+    const year = parseInt(dateStr.substring(0, 4));
+    if (!isNaN(year) && year > 1900 && year <= new Date().getFullYear()) {
+      return year;
+    }
+  }
+  
   // extract and return full year from track date or null
   if (track.date) {
     const year = new Date(track.date).getFullYear();
     return !isNaN(year) ? year : null;
   }
+  
   return null;
 }
 
