@@ -105,11 +105,26 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
     ...selectedTrack,
     similarity_score: selectedTrack.lengthScore.toFixed(3),
     algorithm_details: {
-      score_breakdown: {
-        track_duration: formatDuration(selectedTrack.trackDuration),
-        playlist_avg_duration: formatDuration(playlistDurationProfile.avgDuration),
-        duration_difference: formatDuration(Math.abs(selectedTrack.trackDuration - playlistDurationProfile.avgDuration)),
-        length_category: categoriseDuration(selectedTrack.trackDuration)
+      track_duration: formatDuration(selectedTrack.trackDuration),
+      playlist_avg_duration: formatDuration(playlistDurationProfile.avgDuration),
+      duration_difference: formatDuration(Math.abs(selectedTrack.trackDuration - playlistDurationProfile.avgDuration)),
+      length_category: categoriseDuration(selectedTrack.trackDuration),
+      length_score: selectedTrack.lengthScore,
+      duration_variance: playlistDurationProfile.stdDuration,
+      playlist_duration_range: {
+        min: formatDuration(playlistDurationProfile.minDuration),
+        max: formatDuration(playlistDurationProfile.maxDuration)
+      },
+      duration_percentiles: {
+        p25: formatDuration(playlistDurationProfile.percentiles.p25),
+        p50: formatDuration(playlistDurationProfile.percentiles.p50),
+        p75: formatDuration(playlistDurationProfile.percentiles.p75)
+      },
+      cluster_match: getClusterMatch(selectedTrack.trackDuration, playlistDurationProfile.clusters),
+      similarity_components: {
+        duration_similarity: calculateDurationSimilarity(selectedTrack.trackDuration, playlistDurationProfile).toFixed(3),
+        cluster_bonus: calculateClusterBonus(selectedTrack.trackDuration, playlistDurationProfile.clusters).toFixed(3),
+        distribution_score: calculateDistributionSimilarity(selectedTrack.trackDuration, playlistDurationProfile).toFixed(3)
       }
     }
   };
@@ -331,6 +346,18 @@ function selectRandomTrack(tracks, timestamp) {
       }
     }
   };
+}
+
+/**
+ * Helper function to determine cluster match for a track duration
+ * @param   {number} duration - Track duration in milliseconds
+ * @param   {Object} clusters - Duration clusters
+ * @returns {string} Cluster match type
+ */
+function getClusterMatch(duration, clusters) {
+  if (duration <= clusters.short.maxDuration) return 'short';
+  if (duration <= clusters.medium.maxDuration) return 'medium';
+  return 'long';
 }
 
 module.exports = {
