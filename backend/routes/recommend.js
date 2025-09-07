@@ -40,6 +40,7 @@ router.post('/', async (req, res) => {
         id: playlist.id,
         name: playlist.name,
         description: playlist.description,
+        tracks: playlist.tracks, // include tracks for regenerate functionality
         added_tracks_count: playlist.tracks.length,
         last_updated: playlist.last_updated,
       },
