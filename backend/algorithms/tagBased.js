@@ -154,6 +154,11 @@ function recommendByTags(candidateTracks, playlistTracks, timestamp = Date.now()
  */
 function buildTagProfile(tracks) {
   try {
+    // validation: tracks must be a non-empty array
+    if (!tracks || !Array.isArray(tracks) || tracks.length === 0) {
+      return { tagFrequency: {}, allTags: [], totalTracks: 0 };
+    }
+    
     const tagFrequency = {};
     const allTags = [];
     

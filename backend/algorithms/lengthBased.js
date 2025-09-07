@@ -20,11 +20,11 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
   const playlistVectors = playlistTracks.map(track => {
     const features = extractTrackFeatures(track);
     return [
-      features.durationMs / 1000000, // normalise duration
-      features.yearNormalised,
-      features.artistTags.length,
-      features.albumTags.length,
-      features.decadeTags.length
+      (features.duration || 0) / 1000000, // normalise duration (convert to seconds and normalize)
+      (features.year || 0) / 2025, // normalize year
+      (features.allTags || []).length, // use allTags length
+      0, // placeholder for album tags
+      Math.floor((features.year || 0) / 10) // decade value
     ];
   }).filter(vector => vector.every(val => !isNaN(val)));
   
@@ -52,11 +52,11 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
     let comprehensiveScore = 0;
     if (playlistVectors.length > 0) {
       const candidateVector = [
-        trackFeatures.durationMs / 1000000, // normalise duration
-        trackFeatures.yearNormalised,
-        trackFeatures.artistTags.length,
-        trackFeatures.albumTags.length,
-        trackFeatures.decadeTags.length
+        (trackFeatures.duration || 0) / 1000000, // normalise duration
+        (trackFeatures.year || 0) / 2025, // normalize year
+        (trackFeatures.allTags || []).length, // use allTags length
+        0, // placeholder for album tags
+        Math.floor((trackFeatures.year || 0) / 10) // decade value
       ];
       // only compute if no NaN values
       if (candidateVector.every(val => !isNaN(val))) {
