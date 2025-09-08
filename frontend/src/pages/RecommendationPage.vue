@@ -232,7 +232,7 @@
     @cancel="modalVisible = false"
   >
     <div v-if="playlists.length" class="space-y-3">
-      <div class="space-y-3 max-h-60 overflow-y-auto">
+      <div class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
         <button
           v-for="playlist in playlists"
           :key="playlist.id"
@@ -389,3 +389,34 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgb(38, 38, 38);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(82, 82, 82);
+  border-radius: 4px;
+  border: 1px solid rgb(64, 64, 64);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(115, 115, 115);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: rgb(38, 38, 38);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(82, 82, 82) rgb(38, 38, 38);
+}
+</style>
