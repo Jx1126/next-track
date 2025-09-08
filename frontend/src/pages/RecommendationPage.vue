@@ -109,7 +109,7 @@
           <div class="space-y-6">
             <button
               @click="openPlaylistModal"
-              class="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold font-poppins px-12 py-5 rounded-2xl shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all duration-300 ease-out group relative overflow-hidden text-lg"
+              class="bg-gradient-to-r hover:cursor-pointer from-cyan-500 to-blue-500 text-white font-semibold font-poppins px-12 py-5 rounded-2xl shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all duration-300 ease-out group relative overflow-hidden text-lg"
             >
               <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div class="relative flex items-center gap-3">
@@ -200,7 +200,7 @@
             <div class="flex justify-center pt-2">
               <button
                 @click="goToResultsPage"
-                class="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold font-poppins px-16 py-5 rounded-2xl shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all duration-300 ease-out group relative overflow-hidden text-lg"
+                class="bg-gradient-to-r hover:cursor-pointer from-cyan-500 to-blue-500 text-white font-semibold font-poppins px-16 py-5 rounded-2xl shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all duration-300 ease-out group relative overflow-hidden text-lg"
                 :disabled="!selectedAlgorithm"
                 :class="!selectedAlgorithm ? 'opacity-50 cursor-not-allowed' : ''"
               >
