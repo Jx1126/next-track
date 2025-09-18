@@ -344,7 +344,7 @@ export default {
 
     // tag-based algorithm methods
     getTagSimilarityScore() {
-      const score = this.recommendedTrack.algorithm_details?.tag_similarity || this.recommendedTrack.similarity_score || 0;
+      const score = this.recommendedTrack.algorithm_details?.average_similarity || this.recommendedTrack.similarity_score || 0;
       return score.toFixed(3);
     },
 
