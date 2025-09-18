@@ -4,83 +4,150 @@
     <img src="./frontend/public/nexttrack-logo.svg" alt="Logo" width="200" height="200">
   </a>
 
-<h3 align="center">NextTrack – A Stateless Music Recommendation API</h3>
+<h1 align="center" style="border-bottom: none;">NextTrack</h1>
 
   <p align="center">
-    CM3070 – Computer Science Final Year Project
+    A Stateless Music Recommendation API built for<br>CM3070 – Computer Science Final Year Project
     <br />
     <a href="https://github.com/Jx1126/next-track"><strong>Repository Source »</strong></a>
     <br />
+    <br />
+    <a href="#getting-started">Quick Start</a>
+    ·
+    <a href="#algorithms">Algorithms</a>
+    ·
+    <a href="#privacy--security">Privacy & Security</a>
+    ·
+    <a href="#acknowledgments">Acknowledgments</a>
   </p>
 </div>
 
-## 📜 Project Overview
+## Overview
 
-### ℹ️ About the Project
-**NextTrack** is a stateless, privacy-focused music recommendation API developed as part of the CM3070 Final Year Project. It allows users to get music recommendations without any user profiling, session tracking, or persistent data storage. The system uses external metadata sources such as MusicBrainz to recommend the next track based on user-provided track identifiers and preference parameters.
+NextTrack is a **completely stateless** music recommendation API developed as part of the CM3070 Final Year Project that generates personalised suggestions without storing any user data.
 
-The project aims to deliver quality recommendations while respecting user privacy and avoiding account-based personalisation. All recommendations are made based on real-time input and publicly available metadata only.
+Built as a foundational concept for privacy-preserving recommendation systems, it demonstrates that effective music discovery can be achieved through algorithms and metadata analysis, eliminating the need for user tracking, databases, or persistent storage.
 
-### 📁 Project Structure
+### Key Features
 
-- `backend/`: Node.js + ExpressJS
-- `frontend/`: Vue 3 + Vite
+- ⚡ Zero Data Storage - No databases, user profiles, or session tracking
+- ⚡ Six Recommendation Algorithms - Artist-based, tag-based, temporal, length-based, hybrid, and random
+- ⚡ Real-time Processing - Each request processed independently in memory
+- ⚡ RESTful API - Clean, stateless HTTP endpoints
+- ⚡ Modern Frontend - Vue.js interface for easy API interactions
+- ⚡ Cold Start Friendly - No warmup period required
+- ⚡ Shared Account Safe - No cross-contamination between users
+- ⚡ Privacy by Design - GDPR-compliant architecture
 
-### 🗝️ Key Features
+## Tech Stack
 
--  Stateless and RESTful API design
--  No user tracking or account requirement
--  Recommendations based on external metadata (e.g., MusicBrainz)
--  Cold-start and shared-account friendly
--  Frontend for input and result display
+**Frontend**
 
-### 🛠️ Built With
-* Frontend
-  * ![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
-  * ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-  * ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-
-* Backend
-  * ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
-  * ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-
-* External API
-  * ![MusicBrainz](https://img.shields.io/badge/Musicbrainz-EB743B?style=for-the-badge&logo=musicbrainz&logoColor=BA478F)
+<img alt="Vue" src="https://img.shields.io/badge/vuejs-%2335495e.svg?logo=vuedotjs&logoColor=%234FC08D">
+<img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF.svg?logo=vite&logoColor=white">
+<img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white">
 
 <br>
 
+**Backend**
 
-## 🚀 Getting Started
+<img alt="Node" src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white">
+<img alt="Express" src="https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white">
+<img alt="MusicBrainz" src="https://img.shields.io/badge/MusicBrainz-BA478F?logo=musicbrainz&logoColor=white">
 
-### 📦 Project Setup (All dependencies + Unified Dev Start)
-1. Install all project dependencies (root, frontend, backend):
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn package manager
+- Internet access for third-party metadata
+
+> [!NOTE]
+> Default dev ports:
+> - **Backend:** http://localhost:3000
+> - **Frontend (Vite):** http://localhost:5173
+
+### Quick Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Jx1126/next-track.git
+   cd next-track
+   ```
+
+2. **Install all dependencies**
    ```bash
    npm run install:all
-2. Run both frontend and backend concurrently:
+   ```
+
+3. **Start development servers**
    ```bash
    npm run dev
-3. Open the frontend in your browser:
-   ```bash
-   http://localhost:5173
    ```
-4. The backend API will be available at:
-   ```bash
-   http://localhost:3000
-   ```
----
-### 🔧 Alternative Manual Setup (if needed)
-Backend (Node.js + Express)
-  ```bash
-  cd backend
-  npm install
-  npm run start
-  ```
-Frontend (Vue + Vite)
-  ```bash
-  cd frontend
-  npm install
-  npm run dev
-  ```
+
+### Manual Setup (Alternative)
+
+**Backend Setup**
+```bash
+cd backend
+npm install
+npm start
+```
+
+**Frontend Setup**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Algorithms
+
+### 1. Artist-Based Algorithm
+- `artist-based`
+- Analyses artist relationships and collaborations
+- Uses enhanced Jaccard similarity on artist metadata
+- Promotes discovery by penalising exact artist matches
+
+### 2. Tag-Based Algorithm
+- `tag-based`
+- Processes genre, mood, and style tags
+- Implements playlist-level tag profiling
+- Supports semantic tag relationships
+
+### 3. Temporal Algorithm
+- `temporal`
+- Considers release years and musical eras
+- Performs decade-based clustering
+- Handles missing date information gracefully
+
+### 4. Length-Based Algorithm
+- `length-based`
+- Clusters tracks by duration patterns
+- Maintains playlist flow consistency
+- Statistical analysis of duration distributions
+
+### 5. Hybrid Algorithm
+- `hybrid`
+- Dynamically weights all algorithms based on playlist characteristics
+- Analyses artist diversity, tag entropy, temporal variance
+- Adaptive personalisation without user data
+
+### 6. Random Algorithm
+- `random`
+- Baseline algorithm for evaluation purposes
+- Ensures unbiased recommendation sampling
+
+## Privacy & Security
+
+NextTrack implements **Privacy by Design** principles:
+
+- ⚡ No Data Persistence - Zero user data stored between requests
+- ⚡ Stateless Processing - Each request handled independently
+- ⚡ No User Tracking - No cookies, sessions, or identifiers
+- ⚡ Memory-Only Operations - All processing occurs in RAM
+- ⚡ GDPR Compliant - No personal data collection or processing
 
 <br>
 
@@ -91,3 +158,13 @@ Frontend (Vue + Vite)
 >[!WARNING]
 > External APIs like MusicBrainz may throttle or block repeated requests.<br>
 > Avoid spamming to ensure smooth use.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [MusicBrainz](https://musicbrainz.org/) for providing comprehensive music metadata
+- [Vue.js](https://vuejs.org/) and [Express.js](https://expressjs.com/) communities
+- University of London for academic supervision
