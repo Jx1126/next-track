@@ -1,11 +1,8 @@
 # Local version files
 *.local.*
-
-# Report and Rubrics
-Report.pdf
-Report.md
-Rubrics.pdf
-Rubrics.md
+*.local
+Local
+FinalReport
 
 # === Output directories ===
 frontend/node_modules/
