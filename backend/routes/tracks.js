@@ -1,6 +1,6 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { createMusicBrainzRequest } = require('../utils/musicbrainz'); // import the helper function to create MusicBrainz requests
+const { createMusicBrainzRequest } = require("../utils/musicbrainz"); // import the helper function to create MusicBrainz requests
 
 /**
  * @route   GET /api/music/search
@@ -15,51 +15,54 @@ const { createMusicBrainzRequest } = require('../utils/musicbrainz'); // import 
  * @status  400 - Bad Request if no search parameters are provided
  * @status  500 - Internal Server Error if there is an issue with the MusicBrainz API request
  */
-router.get('/search', async (req, res) => {
+router.get("/search", async (req, res) => {
   try {
     const { q, artist, track, limit = 10, offset = 0 } = req.query;
 
     // validation: must provide at least one search parameter
     if (!q && !artist && !track) {
       return res.status(400).json({
-        error: 'Search query required',
-        message: 'Provide either "q" for general search, or "artist" and/or "track" for specific search'
+        error: "Search query required",
+        message:
+          'Provide either "q" for general search, or "artist" and/or "track" for specific search',
       });
     }
 
     // set up the query based on provided parameters
     // if 'q' is provided, search directly, if not, build a query from 'artist' and 'track'
-    let query = '';
+    let query = "";
     if (q) {
       query = q;
     } else {
       const query_parts = [];
       if (artist) query_parts.push(`artist:${artist}`);
       if (track) query_parts.push(`track:${track}`);
-      query = query_parts.join(' AND ');
+      query = query_parts.join(" AND ");
     }
 
     // set up parameters for MusicBrainz API request
-    const data = await createMusicBrainzRequest('recording', {
+    const data = await createMusicBrainzRequest("recording", {
       query,
       limit: Math.min(limit, 100), // limit to max 100 results
       offset: parseInt(offset),
-      inc: 'artist-credits+releases+tags'
+      inc: "artist-credits+releases+tags",
     });
 
     // format the search results
-    const search_result_tracks = data.recordings.map((recording) => ({
+    const search_result_tracks =
+      data.recordings.map((recording) => ({
         id: recording.id,
         title: recording.title,
-        artist: recording['artist-credit']?.[0]?.name || 'Unknown Artist',
-        artist_id: recording['artist-credit']?.[0]?.artist?.id,
+        artist: recording["artist-credit"]?.[0]?.name || "Unknown Artist",
+        artist_id: recording["artist-credit"]?.[0]?.artist?.id,
         length: recording.length ? Math.round(recording.length / 1000) : 0, // length in seconds
-        releases: recording.releases?.map(release => ({
-          id: release.id,
-          title: release.title,
-          date: release.date,
-        })) || [],
-        tags: recording.tags?.map(tag => tag.name) || [],
+        releases:
+          recording.releases?.map((release) => ({
+            id: release.id,
+            title: release.title,
+            date: release.date,
+          })) || [],
+        tags: recording.tags?.map((tag) => tag.name) || [],
         score: recording.score || 0,
       })) || [];
 
@@ -71,12 +74,11 @@ router.get('/search', async (req, res) => {
       limit: parseInt(limit),
       query: query,
     });
-    
   } catch (error) {
     console.error(`Error in /search: ${error.message}`);
     res.status(500).json({
-      error: 'Internal Server Error',
-      message: error.message
+      error: "Internal Server Error",
+      message: error.message,
     });
   }
 });
