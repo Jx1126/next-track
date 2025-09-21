@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" style="background-color: #0A0A0A;">
+  <div class="relative" style="background-color: #0a0a0a">
     <!-- navigation bar -->
     <NavBar />
 
@@ -18,9 +18,9 @@
 </template>
 
 <script>
-import BackgroundBlobs from './components/BackgroundBlobs.vue';
-import NavBar from './components/NavBar.vue';
-import Toast from './components/Toast.vue';
+import BackgroundBlobs from "./components/BackgroundBlobs.vue";
+import NavBar from "./components/NavBar.vue";
+import Toast from "./components/Toast.vue";
 
 export default {
   components: {
