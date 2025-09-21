@@ -8,11 +8,11 @@ function extractTrackFeatures(track) {
   if (!track) {
     return {
       allTags: [],
-      artist: '',
-      album: '',
-      title: '',
+      artist: "",
+      album: "",
+      title: "",
       year: null,
-      duration: null
+      duration: null,
     };
   }
 
@@ -27,11 +27,11 @@ function extractTrackFeatures(track) {
     }
 
     // push artist tag if available
-    if (track.artist && typeof track.artist === 'string') {
+    if (track.artist && typeof track.artist === "string") {
       allTags.push(`artist:${track.artist.toLowerCase()}`);
     }
     // push album tag if available
-    if (track.album && typeof track.album === 'string') {
+    if (track.album && typeof track.album === "string") {
       allTags.push(`album:${track.album.toLowerCase()}`);
     }
     // push year/decade tags if available
@@ -45,13 +45,17 @@ function extractTrackFeatures(track) {
         // handle MusicBrainz release_date format: "2020", "2020-05", "2020-05-15"
         const dateStr = track.release_date.toString();
         const yearFromDate = parseInt(dateStr.substring(0, 4));
-        if (!isNaN(yearFromDate) && yearFromDate > 1900 && yearFromDate <= new Date().getFullYear()) {
+        if (
+          !isNaN(yearFromDate) &&
+          yearFromDate > 1900 &&
+          yearFromDate <= new Date().getFullYear()
+        ) {
           year = yearFromDate;
         }
       } else if (track.date) {
         year = new Date(track.date).getFullYear();
       }
-      
+
       if (year && !isNaN(year)) {
         const decade = Math.floor(year / 10) * 10; // decade tag
         allTags.push(`decade:${decade}s`);
@@ -61,29 +65,32 @@ function extractTrackFeatures(track) {
 
     // normalise tags and remove duplicates
     allTags = allTags
-      .filter(tag => tag && typeof tag === 'string' && tag.trim().length > 0)
-      .map(tag => tag.toLowerCase().trim())
+      .filter((tag) => tag && typeof tag === "string" && tag.trim().length > 0)
+      .map((tag) => tag.toLowerCase().trim())
       .filter((tag, index, arr) => arr.indexOf(tag) === index); // remove duplicates
 
     return {
       allTags,
-      artist: track.artist || '',
-      album: track.album || '',
-      title: track.title || '',
+      artist: track.artist || "",
+      album: track.album || "",
+      title: track.title || "",
       year: year || track.year || track.release_year || null,
       duration: track.duration || track.length || null,
-      originalTrack: track
+      originalTrack: track,
     };
   } catch (error) {
-    console.warn(`Track feature extraction failed for "${track.title || 'unknown'}":`, error.message);
+    console.warn(
+      `Track feature extraction failed for "${track.title || "unknown"}":`,
+      error.message
+    );
     return {
       allTags: [],
-      artist: track.artist || '',
-      album: track.album || '',
-      title: track.title || '',
+      artist: track.artist || "",
+      album: track.album || "",
+      title: track.title || "",
       year: null,
       duration: null,
-      originalTrack: track
+      originalTrack: track,
     };
   }
 }
@@ -95,7 +102,7 @@ function extractTrackFeatures(track) {
  */
 function extractArtist(track) {
   // extract artist name from track if available
-  return track && track.artist ? track.artist.trim() : '';
+  return track && track.artist ? track.artist.trim() : "";
 }
 
 /**
@@ -107,7 +114,9 @@ function extractTags(track) {
   if (!track) return []; // validation: must be a valid track object
   // extract features from track and filter out artist/album tags
   const features = extractTrackFeatures(track);
-  return features.allTags.filter(tag => !tag.startsWith('artist:') && !tag.startsWith('album:'));
+  return features.allTags.filter(
+    (tag) => !tag.startsWith("artist:") && !tag.startsWith("album:")
+  );
 }
 
 /**
@@ -117,11 +126,12 @@ function extractTags(track) {
  */
 function extractYear(track) {
   if (!track) return null; // validation: must be a valid track object
-  
+
   // extract year, release year from track
   if (track.year && !isNaN(track.year)) return parseInt(track.year);
-  if (track.release_year && !isNaN(track.release_year)) return parseInt(track.release_year);
-  
+  if (track.release_year && !isNaN(track.release_year))
+    return parseInt(track.release_year);
+
   // extract year from release_date field (MusicBrainz format)
   if (track.release_date) {
     // handle different date formats: "2020", "2020-05", "2020-05-15"
@@ -131,13 +141,13 @@ function extractYear(track) {
       return year;
     }
   }
-  
+
   // extract and return full year from track date or null
   if (track.date) {
     const year = new Date(track.date).getFullYear();
     return !isNaN(year) ? year : null;
   }
-  
+
   return null;
 }
 
@@ -149,7 +159,8 @@ function extractYear(track) {
 function extractDuration(track) {
   if (!track) return null; // validation: must be a valid track object
   // extract duration and length from track
-  if (track.duration && !isNaN(track.duration)) return parseFloat(track.duration);
+  if (track.duration && !isNaN(track.duration))
+    return parseFloat(track.duration);
   if (track.length && !isNaN(track.length)) return parseFloat(track.length);
   return null;
 }
@@ -159,5 +170,5 @@ module.exports = {
   extractArtist,
   extractTags,
   extractYear,
-  extractDuration
+  extractDuration,
 };
