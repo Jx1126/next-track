@@ -8,7 +8,7 @@ function jaccardSimilarity(setA, setB) {
   const a = new Set(Array.isArray(setA) ? setA : setA);
   const b = new Set(Array.isArray(setB) ? setB : setB);
 
-  const intersection = new Set([...a].filter(x => b.has(x))); // |A ∩ B|
+  const intersection = new Set([...a].filter((x) => b.has(x))); // |A ∩ B|
   const union = new Set([...a, ...b]); // |A ∪ B|
 
   if (union.size === 0) return 0; // avoid division by 0
@@ -26,11 +26,13 @@ function playlistJaccardSimilarity(candidateSet, ...playlistSets) {
 
   // aggregate all playlist tags into a set
   const aggregatedPlaylistTags = new Set();
-  playlistSets.forEach(playlistSet => {
-    const setArray = Array.isArray(playlistSet) ? playlistSet : Array.from(playlistSet); // convert to array if not already
-    setArray.forEach(tag => aggregatedPlaylistTags.add(tag)); // add each tag to the aggregated set
+  playlistSets.forEach((playlistSet) => {
+    const setArray = Array.isArray(playlistSet)
+      ? playlistSet
+      : Array.from(playlistSet); // convert to array if not already
+    setArray.forEach((tag) => aggregatedPlaylistTags.add(tag)); // add each tag to the aggregated set
   });
-  
+
   // calculate similarity against aggregated playlist
   return jaccardSimilarity(candidateSet, aggregatedPlaylistTags);
 }
@@ -45,7 +47,7 @@ function averageJaccardSimilarity(candidateSet, ...playlistSets) {
   if (playlistSets.length === 0) return 0;
 
   // calculate similarity for each playlist
-  const similarities = playlistSets.map(playlistSet => 
+  const similarities = playlistSets.map((playlistSet) =>
     jaccardSimilarity(candidateSet, playlistSet)
   );
 
@@ -64,7 +66,7 @@ function maxJaccardSimilarity(candidateSet, ...playlistSets) {
   if (playlistSets.length === 0) return 0;
 
   // calculate similarity for each playlist
-  const similarities = playlistSets.map(playlistSet => 
+  const similarities = playlistSets.map((playlistSet) =>
     jaccardSimilarity(candidateSet, playlistSet)
   );
 
@@ -85,19 +87,21 @@ function weightedJaccardSimilarity(candidateTags, ...playlistTagSets) {
       exactMatches: 0,
       partialMatches: 0,
       matchedTags: [],
-      totalTags: candidateTags.length
+      totalTags: candidateTags.length,
     };
   }
 
   // normalise candidate tags
-  const normalisedCandidateTags = candidateTags.map(tag => tag.toLowerCase().trim());
-  
+  const normalisedCandidateTags = candidateTags.map((tag) =>
+    tag.toLowerCase().trim()
+  );
+
   // aggregate all playlist tags
   const allPlaylistTags = new Set();
-  playlistTagSets.forEach(tagSet => {
-    tagSet.forEach(tag => allPlaylistTags.add(tag.toLowerCase().trim()));
+  playlistTagSets.forEach((tagSet) => {
+    tagSet.forEach((tag) => allPlaylistTags.add(tag.toLowerCase().trim()));
   });
-  
+
   // convert aggregated set to array
   const normalisedPlaylist = Array.from(allPlaylistTags);
 
@@ -122,7 +126,8 @@ function weightedJaccardSimilarity(candidateTags, ...playlistTagSets) {
     }
   }
 
-  const totalTags = new Set([...normalisedCandidateTags, ...normalisedPlaylist]).size; // total unique tags
+  const totalTags = new Set([...normalisedCandidateTags, ...normalisedPlaylist])
+    .size; // total unique tags
   const totalMatches = exactMatches + partialMatches; // total matches
 
   return {
@@ -130,7 +135,7 @@ function weightedJaccardSimilarity(candidateTags, ...playlistTagSets) {
     exactMatches,
     partialMatches,
     matchedTags,
-    totalTags
+    totalTags,
   };
 }
 
@@ -144,20 +149,26 @@ function overlapCoefficient(candidateSet, ...playlistSets) {
   if (playlistSets.length === 0) return 0;
 
   // normalise candidate tags
-  const candidate = new Set(Array.isArray(candidateSet) ? candidateSet : candidateSet);
-  
+  const candidate = new Set(
+    Array.isArray(candidateSet) ? candidateSet : candidateSet
+  );
+
   if (playlistSets.length === 1) {
     // single playlist case
-    const playlist = new Set(Array.isArray(playlistSets[0]) ? playlistSets[0] : playlistSets[0]); // normalise playlist tags
-    const intersection = new Set([...candidate].filter(x => playlist.has(x))); // find intersection between candidate and playlist
+    const playlist = new Set(
+      Array.isArray(playlistSets[0]) ? playlistSets[0] : playlistSets[0]
+    ); // normalise playlist tags
+    const intersection = new Set([...candidate].filter((x) => playlist.has(x))); // find intersection between candidate and playlist
     const minSize = Math.min(candidate.size, playlist.size); // find minimum size
     return minSize > 0 ? intersection.size / minSize : 0; // calculate overlap coefficient
   }
 
   // multi-playlist case (average overlap)
-  const overlaps = playlistSets.map(playlistSet => {
-    const playlist = new Set(Array.isArray(playlistSet) ? playlistSet : playlistSet); // normalise playlist tags
-    const intersection = new Set([...candidate].filter(x => playlist.has(x))); // find intersection between candidate and playlist
+  const overlaps = playlistSets.map((playlistSet) => {
+    const playlist = new Set(
+      Array.isArray(playlistSet) ? playlistSet : playlistSet
+    ); // normalise playlist tags
+    const intersection = new Set([...candidate].filter((x) => playlist.has(x))); // find intersection between candidate and playlist
     const minSize = Math.min(candidate.size, playlist.size); // find minimum size
     return minSize > 0 ? intersection.size / minSize : 0; // calculate overlap coefficient
   });
@@ -179,25 +190,27 @@ function comprehensiveJaccardSimilarity(candidateTags, ...playlistTagSets) {
       maxSimilarity: 0,
       weightedSimilarity: 0,
       overlapSimilarity: 0,
-      combinedScore: 0
+      combinedScore: 0,
     };
   }
 
   // calculate similarity metrics
-  const aggregated = playlistJaccardSimilarity(candidateTags, ...playlistTagSets);
+  const aggregated = playlistJaccardSimilarity(
+    candidateTags,
+    ...playlistTagSets
+  );
   const average = averageJaccardSimilarity(candidateTags, ...playlistTagSets);
   const maximum = maxJaccardSimilarity(candidateTags, ...playlistTagSets);
   const weighted = weightedJaccardSimilarity(candidateTags, ...playlistTagSets);
   const overlap = overlapCoefficient(candidateTags, ...playlistTagSets);
 
   // combined score using multiple metrics
-  const combinedScore = (
+  const combinedScore =
     0.3 * aggregated + // similarity to aggregated playlist
     0.3 * average + // average similarity across playlists
     0.2 * weighted.similarity + // weighted similarity with partial matches
     0.1 * overlap + // overlap coefficient
-    0.1 * maximum // best match
-  );
+    0.1 * maximum; // best match
 
   return {
     aggregatedSimilarity: aggregated,
@@ -208,7 +221,7 @@ function comprehensiveJaccardSimilarity(candidateTags, ...playlistTagSets) {
     combinedScore: combinedScore,
     exactMatches: weighted.exactMatches,
     partialMatches: weighted.partialMatches,
-    matchedTags: weighted.matchedTags
+    matchedTags: weighted.matchedTags,
   };
 }
 
@@ -219,5 +232,5 @@ module.exports = {
   maxJaccardSimilarity,
   weightedJaccardSimilarity,
   overlapCoefficient,
-  comprehensiveJaccardSimilarity
+  comprehensiveJaccardSimilarity,
 };

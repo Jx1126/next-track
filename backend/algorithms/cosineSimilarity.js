@@ -6,7 +6,7 @@
  */
 function cosineSimilarity(vectorA, vectorB) {
   if (vectorA.length !== vectorB.length) {
-    throw new Error('Vectors must have the same length');
+    throw new Error("Vectors must have the same length");
   }
 
   let dotProduct = 0;
@@ -38,12 +38,12 @@ function comprehensiveCosineSimilarity(candidateVector, playlistVectors) {
     return {
       averageSimilarity: 0,
       maxSimilarity: 0,
-      combinedScore: 0
+      combinedScore: 0,
     };
   }
 
   // calculate cosine similarity for each playlist vector
-  const similarities = playlistVectors.map(playlistVector => 
+  const similarities = playlistVectors.map((playlistVector) =>
     cosineSimilarity(candidateVector, playlistVector)
   );
 
@@ -60,11 +60,11 @@ function comprehensiveCosineSimilarity(candidateVector, playlistVectors) {
     averageSimilarity: average,
     maxSimilarity: maximum,
     combinedScore: combinedScore,
-    similarities: similarities
+    similarities: similarities,
   };
 }
 
 module.exports = {
   cosineSimilarity,
-  comprehensiveCosineSimilarity
+  comprehensiveCosineSimilarity,
 };

@@ -1,5 +1,8 @@
-const { extractTrackFeatures, extractDuration } = require('../utils/trackFeatures');
-const { comprehensiveCosineSimilarity } = require('./cosineSimilarity');
+const {
+  extractTrackFeatures,
+  extractDuration,
+} = require("../utils/trackFeatures");
+const { comprehensiveCosineSimilarity } = require("./cosineSimilarity");
 
 /**
  * Helper function to recommend tracks based on length/duration similarity
@@ -11,43 +14,48 @@ const { comprehensiveCosineSimilarity } = require('./cosineSimilarity');
 function recommendByLength(candidateTracks, playlistTracks, timestamp) {
   // extract duration profile from playlist
   const playlistDurationProfile = buildDurationProfile(playlistTracks);
-  
+
   if (!playlistDurationProfile.hasValidDurations) {
     return selectRandomTrack(candidateTracks, timestamp);
   }
-  
+
   // extract features from playlist tracks for comprehensive similarity
-  const playlistVectors = playlistTracks.map(track => {
-    const features = extractTrackFeatures(track);
-    return [
-      (features.duration || 0) / 1000000, // normalise duration (convert to seconds and normalize)
-      (features.year || 0) / 2025, // normalize year
-      (features.allTags || []).length, // use allTags length
-      0, // placeholder for album tags
-      Math.floor((features.year || 0) / 10) // decade value
-    ];
-  }).filter(vector => vector.every(val => !isNaN(val)));
-  
+  const playlistVectors = playlistTracks
+    .map((track) => {
+      const features = extractTrackFeatures(track);
+      return [
+        (features.duration || 0) / 1000000, // normalise duration (convert to seconds and normalize)
+        (features.year || 0) / 2025, // normalize year
+        (features.allTags || []).length, // use allTags length
+        0, // placeholder for album tags
+        Math.floor((features.year || 0) / 10), // decade value
+      ];
+    })
+    .filter((vector) => vector.every((val) => !isNaN(val)));
+
   // score candidates based on duration similarity
-  const scoredTracks = candidateTracks.map(track => {
+  const scoredTracks = candidateTracks.map((track) => {
     const trackDuration = extractDuration(track);
     const trackFeatures = extractTrackFeatures(track);
-    
+
     // calculate duration similarity
     const durationScore = calculateDurationSimilarity(
       trackDuration,
       playlistDurationProfile
     );
-    
+
     // duration cluster bonus
-    const clusterBonus = calculateClusterBonus(trackDuration, playlistDurationProfile.clusters);
-    
+    const clusterBonus = calculateClusterBonus(
+      trackDuration,
+      playlistDurationProfile.clusters
+    );
+
     // statistical distribution score
     const distributionScore = calculateDistributionSimilarity(
       trackDuration,
       playlistDurationProfile
     );
-    
+
     // comprehensive similarity
     let comprehensiveScore = 0;
     if (playlistVectors.length > 0) {
@@ -56,77 +64,102 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
         (trackFeatures.year || 0) / 2025, // normalize year
         (trackFeatures.allTags || []).length, // use allTags length
         0, // placeholder for album tags
-        Math.floor((trackFeatures.year || 0) / 10) // decade value
+        Math.floor((trackFeatures.year || 0) / 10), // decade value
       ];
       // only compute if no NaN values
-      if (candidateVector.every(val => !isNaN(val))) {
-        const similarity = comprehensiveCosineSimilarity(candidateVector, playlistVectors);
+      if (candidateVector.every((val) => !isNaN(val))) {
+        const similarity = comprehensiveCosineSimilarity(
+          candidateVector,
+          playlistVectors
+        );
         comprehensiveScore = similarity.combinedScore;
       }
     }
-    
+
     // combined length score with comprehensive similarity
-    const totalScore = (
+    const totalScore =
       0.4 * durationScore +
       0.25 * clusterBonus +
       0.15 * distributionScore +
-      0.2 * comprehensiveScore
-    );
-    
+      0.2 * comprehensiveScore;
+
     // add random factor
     const randomFactor = ((timestamp + track.title.length) % 100) / 1000;
-    
+
     return {
       ...track,
       lengthScore: totalScore + randomFactor,
       trackDuration,
-      explanation: formatLengthExplanation(trackDuration, playlistDurationProfile)
+      explanation: formatLengthExplanation(
+        trackDuration,
+        playlistDurationProfile
+      ),
     };
   });
-  
+
   // filter tracks with valid durations and length
-  const validTracks = scoredTracks.filter(track => 
-    track.trackDuration > 0 && track.lengthScore > 0.1
+  const validTracks = scoredTracks.filter(
+    (track) => track.trackDuration > 0 && track.lengthScore > 0.1
   );
-  
+
   if (validTracks.length === 0) {
     return selectRandomTrack(candidateTracks, timestamp);
   }
-  
+
   // sort by length score
   validTracks.sort((a, b) => b.lengthScore - a.lengthScore);
-  
+
   // select from top candidates
   const topCandidates = validTracks.slice(0, Math.min(6, validTracks.length));
-  const randomIndex = (timestamp + Math.floor(Math.random() * topCandidates.length)) % topCandidates.length;
+  const randomIndex =
+    (timestamp + Math.floor(Math.random() * topCandidates.length)) %
+    topCandidates.length;
   const selectedTrack = topCandidates[randomIndex];
-  
+
   return {
     ...selectedTrack,
     similarity_score: selectedTrack.lengthScore.toFixed(3),
     algorithm_details: {
       track_duration: formatDuration(selectedTrack.trackDuration),
-      playlist_avg_duration: formatDuration(playlistDurationProfile.avgDuration),
-      duration_difference: formatDuration(Math.abs(selectedTrack.trackDuration - playlistDurationProfile.avgDuration)),
+      playlist_avg_duration: formatDuration(
+        playlistDurationProfile.avgDuration
+      ),
+      duration_difference: formatDuration(
+        Math.abs(
+          selectedTrack.trackDuration - playlistDurationProfile.avgDuration
+        )
+      ),
       length_category: categoriseDuration(selectedTrack.trackDuration),
       length_score: selectedTrack.lengthScore,
       duration_variance: playlistDurationProfile.stdDuration,
       playlist_duration_range: {
         min: formatDuration(playlistDurationProfile.minDuration),
-        max: formatDuration(playlistDurationProfile.maxDuration)
+        max: formatDuration(playlistDurationProfile.maxDuration),
       },
       duration_percentiles: {
         p25: formatDuration(playlistDurationProfile.percentiles.p25),
         p50: formatDuration(playlistDurationProfile.percentiles.p50),
-        p75: formatDuration(playlistDurationProfile.percentiles.p75)
+        p75: formatDuration(playlistDurationProfile.percentiles.p75),
       },
-      cluster_match: getClusterMatch(selectedTrack.trackDuration, playlistDurationProfile.clusters),
+      cluster_match: getClusterMatch(
+        selectedTrack.trackDuration,
+        playlistDurationProfile.clusters
+      ),
       similarity_components: {
-        duration_similarity: calculateDurationSimilarity(selectedTrack.trackDuration, playlistDurationProfile).toFixed(3),
-        cluster_bonus: calculateClusterBonus(selectedTrack.trackDuration, playlistDurationProfile.clusters).toFixed(3),
-        distribution_score: calculateDistributionSimilarity(selectedTrack.trackDuration, playlistDurationProfile).toFixed(3)
-      }
-    }
+        duration_similarity: calculateDurationSimilarity(
+          selectedTrack.trackDuration,
+          playlistDurationProfile
+        ).toFixed(3),
+        cluster_bonus: calculateClusterBonus(
+          selectedTrack.trackDuration,
+          playlistDurationProfile.clusters
+        ).toFixed(3),
+        distribution_score: calculateDistributionSimilarity(
+          selectedTrack.trackDuration,
+          playlistDurationProfile
+        ).toFixed(3),
+      },
+    },
   };
 }
 
@@ -137,18 +170,23 @@ function recommendByLength(candidateTracks, playlistTracks, timestamp) {
  */
 function buildDurationProfile(tracks) {
   const durations = tracks
-    .map(track => extractDuration(track))
-    .filter(duration => duration > 0);
-  
+    .map((track) => extractDuration(track))
+    .filter((duration) => duration > 0);
+
   if (durations.length === 0) {
     return { hasValidDurations: false };
   }
-  
+
   // calculate basic statistics
-  const avgDuration = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
-  const variance = durations.reduce((sum, duration) => sum + Math.pow(duration - avgDuration, 2), 0) / durations.length;
+  const avgDuration =
+    durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+  const variance =
+    durations.reduce(
+      (sum, duration) => sum + Math.pow(duration - avgDuration, 2),
+      0
+    ) / durations.length;
   const stdDuration = Math.sqrt(variance);
-  
+
   // build duration clusters (short, medium, long)
   const clusters = buildDurationClusters(durations);
 
@@ -156,10 +194,10 @@ function buildDurationProfile(tracks) {
   const sortedDurations = [...durations].sort((a, b) => a - b);
   const percentiles = {
     p25: sortedDurations[Math.floor(sortedDurations.length * 0.25)],
-    p50: sortedDurations[Math.floor(sortedDurations.length * 0.50)],
-    p75: sortedDurations[Math.floor(sortedDurations.length * 0.75)]
+    p50: sortedDurations[Math.floor(sortedDurations.length * 0.5)],
+    p75: sortedDurations[Math.floor(sortedDurations.length * 0.75)],
   };
-  
+
   return {
     hasValidDurations: true,
     durations,
@@ -168,7 +206,7 @@ function buildDurationProfile(tracks) {
     minDuration: Math.min(...durations),
     maxDuration: Math.max(...durations),
     clusters,
-    percentiles
+    percentiles,
   };
 }
 
@@ -180,26 +218,31 @@ function buildDurationProfile(tracks) {
 function buildDurationClusters(durations) {
   const sortedDurations = [...durations].sort((a, b) => a - b); // sort durations
   const third = Math.floor(sortedDurations.length / 3); // divide into three equal parts
-  
+
   return {
     // short duration cluster
     short: {
       count: third,
-      avgDuration: sortedDurations.slice(0, third).reduce((sum, d) => sum + d, 0) / third,
-      maxDuration: sortedDurations[third - 1] || 0
+      avgDuration:
+        sortedDurations.slice(0, third).reduce((sum, d) => sum + d, 0) / third,
+      maxDuration: sortedDurations[third - 1] || 0,
     },
     // medium duration cluster
     medium: {
       count: third,
-      avgDuration: sortedDurations.slice(third, 2 * third).reduce((sum, d) => sum + d, 0) / third,
-      maxDuration: sortedDurations[2 * third - 1] || 0
+      avgDuration:
+        sortedDurations.slice(third, 2 * third).reduce((sum, d) => sum + d, 0) /
+        third,
+      maxDuration: sortedDurations[2 * third - 1] || 0,
     },
     // long duration cluster
     long: {
       count: sortedDurations.length - 2 * third,
-      avgDuration: sortedDurations.slice(2 * third).reduce((sum, d) => sum + d, 0) / (sortedDurations.length - 2 * third),
-      maxDuration: sortedDurations[sortedDurations.length - 1] || 0
-    }
+      avgDuration:
+        sortedDurations.slice(2 * third).reduce((sum, d) => sum + d, 0) /
+        (sortedDurations.length - 2 * third),
+      maxDuration: sortedDurations[sortedDurations.length - 1] || 0,
+    },
   };
 }
 
@@ -211,13 +254,15 @@ function buildDurationClusters(durations) {
  */
 function calculateDurationSimilarity(trackDuration, profile) {
   if (trackDuration === 0) return 0;
-  
+
   const durationDifference = Math.abs(trackDuration - profile.avgDuration); // difference from average
   const sigma = Math.max(profile.stdDuration, 30000); // minimum spread of 30 seconds
-  
+
   // gaussian similarity with duration difference
-  const gaussianSimilarity = Math.exp(-Math.pow(durationDifference, 2) / (2 * Math.pow(sigma, 2)));
-  
+  const gaussianSimilarity = Math.exp(
+    -Math.pow(durationDifference, 2) / (2 * Math.pow(sigma, 2))
+  );
+
   return gaussianSimilarity;
 }
 
@@ -229,22 +274,28 @@ function calculateDurationSimilarity(trackDuration, profile) {
  */
 function calculateClusterBonus(trackDuration, clusters) {
   if (trackDuration === 0) return 0;
-  
-  let clusterMatch = 'none';
+
+  let clusterMatch = "none";
   let clusterScore = 0;
-  
+
   // determine which cluster the track belongs to
   if (trackDuration <= clusters.short.maxDuration) {
-    clusterMatch = 'short';
-    clusterScore = clusters.short.count / (clusters.short.count + clusters.medium.count + clusters.long.count);
+    clusterMatch = "short";
+    clusterScore =
+      clusters.short.count /
+      (clusters.short.count + clusters.medium.count + clusters.long.count);
   } else if (trackDuration <= clusters.medium.maxDuration) {
-    clusterMatch = 'medium';
-    clusterScore = clusters.medium.count / (clusters.short.count + clusters.medium.count + clusters.long.count);
+    clusterMatch = "medium";
+    clusterScore =
+      clusters.medium.count /
+      (clusters.short.count + clusters.medium.count + clusters.long.count);
   } else {
-    clusterMatch = 'long';
-    clusterScore = clusters.long.count / (clusters.short.count + clusters.medium.count + clusters.long.count);
+    clusterMatch = "long";
+    clusterScore =
+      clusters.long.count /
+      (clusters.short.count + clusters.medium.count + clusters.long.count);
   }
-  
+
   return clusterScore;
 }
 
@@ -256,20 +307,26 @@ function calculateClusterBonus(trackDuration, clusters) {
  */
 function calculateDistributionSimilarity(trackDuration, profile) {
   if (trackDuration === 0) return 0;
-  
+
   // check position within distribution
-  if (trackDuration >= profile.percentiles.p25 && trackDuration <= profile.percentiles.p75) {
+  if (
+    trackDuration >= profile.percentiles.p25 &&
+    trackDuration <= profile.percentiles.p75
+  ) {
     return 1.0; // within interquartile range
-  } else if (trackDuration >= profile.minDuration && trackDuration <= profile.maxDuration) {
+  } else if (
+    trackDuration >= profile.minDuration &&
+    trackDuration <= profile.maxDuration
+  ) {
     return 0.6; // within overall range
   }
-  
+
   // calculate distance from nearest boundary
   const distanceFromRange = Math.min(
     Math.abs(trackDuration - profile.minDuration),
     Math.abs(trackDuration - profile.maxDuration)
   );
-  
+
   // decay similarity based on distance
   const maxDistance = profile.avgDuration; // use average as reference distance
   return Math.exp(-distanceFromRange / maxDistance) * 0.3;
@@ -282,12 +339,12 @@ function calculateDistributionSimilarity(trackDuration, profile) {
  */
 function categoriseDuration(duration) {
   const minutes = duration / (1000 * 60);
-  
-  if (minutes < 2) return 'very_short';
-  if (minutes < 3.5) return 'short';
-  if (minutes < 5) return 'medium';
-  if (minutes < 7) return 'long';
-  return 'very_long';
+
+  if (minutes < 2) return "very_short";
+  if (minutes < 3.5) return "short";
+  if (minutes < 5) return "medium";
+  if (minutes < 7) return "long";
+  return "very_long";
 }
 
 /**
@@ -296,12 +353,12 @@ function categoriseDuration(duration) {
  * @returns {string} Formatted duration string.
  */
 function formatDuration(duration) {
-  if (duration === 0) return '0:00';
-  
+  if (duration === 0) return "0:00";
+
   const minutes = Math.floor(duration / (1000 * 60));
   const seconds = Math.floor((duration % (1000 * 60)) / 1000);
-  
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 /**
@@ -311,11 +368,11 @@ function formatDuration(duration) {
  * @returns {string} Human-readable explanation.
  */
 function formatLengthExplanation(trackDuration, profile) {
-  if (trackDuration === 0) return 'Duration exploration (unknown length)';
-  
+  if (trackDuration === 0) return "Duration exploration (unknown length)";
+
   const durationDiff = Math.abs(trackDuration - profile.avgDuration);
   const tolerance = profile.stdDuration || 30000; // 30 seconds tolerance
-  
+
   if (durationDiff <= tolerance) {
     return `Similar length (${formatDuration(trackDuration)})`;
   } else if (durationDiff <= 2 * tolerance) {
@@ -332,19 +389,20 @@ function formatLengthExplanation(trackDuration, profile) {
  * @returns {Object} Random track.
  */
 function selectRandomTrack(tracks, timestamp) {
-  const randomIndex = (timestamp + Math.floor(Math.random() * tracks.length)) % tracks.length; // deterministic random index
+  const randomIndex =
+    (timestamp + Math.floor(Math.random() * tracks.length)) % tracks.length; // deterministic random index
   const track = tracks[randomIndex]; // select random track
-  
+
   return {
     ...track,
-    similarity_score: '0.500',
-    explanation: 'Duration exploration (random selection)',
+    similarity_score: "0.500",
+    explanation: "Duration exploration (random selection)",
     algorithm_details: {
       score_breakdown: {
-        selection_method: 'random_fallback',
-        reason: 'insufficient_duration_data'
-      }
-    }
+        selection_method: "random_fallback",
+        reason: "insufficient_duration_data",
+      },
+    },
   };
 }
 
@@ -355,9 +413,9 @@ function selectRandomTrack(tracks, timestamp) {
  * @returns {string} Cluster match type
  */
 function getClusterMatch(duration, clusters) {
-  if (duration <= clusters.short.maxDuration) return 'short';
-  if (duration <= clusters.medium.maxDuration) return 'medium';
-  return 'long';
+  if (duration <= clusters.short.maxDuration) return "short";
+  if (duration <= clusters.medium.maxDuration) return "medium";
+  return "long";
 }
 
 module.exports = {
@@ -365,5 +423,5 @@ module.exports = {
   buildDurationProfile,
   calculateDurationSimilarity,
   categoriseDuration,
-  formatDuration
+  formatDuration,
 };
